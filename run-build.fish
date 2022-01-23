@@ -5,6 +5,8 @@ if not source (dirname (status --current-filename))/build-utils/common.fish 2>/d
     exit 1
 end
 
+cd $BASE_DIR
+
 set BUILD_TYPE $argv[1]
 set EXTRA_CMAKE_ARGUMENTS
 
@@ -29,6 +31,7 @@ export CMAKE_PREFIX_PATH=/usr
 
 echo "Extra CMake arguments: $EXTRA_CMAKE_ARGUMENTS"
 
+mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 
 set -p EXTRA_CMAKE_ARGUMENTS -DCMAKE_INSTALL_PREFIX=$CURRENT_DIR/
