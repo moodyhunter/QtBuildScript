@@ -15,7 +15,7 @@ if source "$BASE_DIR/kits/$BUILD_TYPE.fish" 2>/dev/null
 else
     echo "The specified kit '$BUILD_TYPE' could not be found."
     echo "Possible kits are:"
-    for f in (basename -s .fish ./kits/*)
+    for f in (basename -s .fish $BASE_DIR/kits/*)
         echo - $f
     end
     exit 1
