@@ -1,0 +1,4 @@
+[submodule "qt"]
+	path = qt
+	url = https://github.com/qt/qt5
+	ignore = dirty
