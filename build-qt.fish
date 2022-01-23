@@ -1,6 +1,6 @@
 #!/bin/fish
 
-if not source (dirname (status --current-filename))/build-utils/common.fish 2>/dev/null
+if not source (dirname (status --current-filename))/utils/common.fish 2>/dev/null
     echo "Initialization failed."
     exit 1
 end
@@ -21,7 +21,7 @@ set -g BUILD_DIR "$BASE_DIR/.build/$BUILD_TYPE"
 set -g CURRENT_DIR "$BASE_DIR/Current-$BUILD_TYPE"
 set -g INSTALL_DIR "$BASE_DIR/nightly-$BUILD_TYPE/"(date -I)
 
-source $BASE_DIR/build-utils/cleanup.fish
+source $BASE_DIR/cleanup.fish
 
 echo "Setting up ccache dir..."
 export CCACHE_DIR=$BASE_DIR/.build-cache
