@@ -13,7 +13,11 @@ set EXTRA_CMAKE_ARGUMENTS
 if source "$BASE_DIR/kits/$BUILD_TYPE.fish" 2>/dev/null
     echo "Succeeded loading build kit: $BUILD_TYPE"
 else
-    echo "Failed building kit: $BUILD_TYPE"
+    echo "The specified kit '$BUILD_TYPE' could not be found."
+    echo "Possible kits are:"
+    for f in (basename -s .fish ./kits/*)
+        echo - $f
+    end
     exit 1
 end
 
