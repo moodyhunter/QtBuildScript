@@ -1,6 +1,7 @@
 #!/bin/fish
 
 if not source (dirname (status --current-filename))/utils/common.fish 2>/dev/null
+    set_color red
     echo "Initialization failed."
     exit 1
 end
@@ -9,12 +10,12 @@ cd $BASE_DIR
 
 echo ""
 echo "Current Build Dir: $BUILD_DIR"
-echo "Base Build Dir: $BASE_DIR/.build/"
 
 set CLEANUP_DIR $BUILD_DIR
 
 if not string match -q "$BASE_DIR/.build/*" "$CLEANUP_DIR"
     echo ""
+    echo "Base build directory: $BASE_DIR/.build/"
     read -l -P '--> Did you mean to clean up the base build directory? [y/N] ' confirm
     switch $confirm
         case Y y
@@ -24,7 +25,9 @@ if not string match -q "$BASE_DIR/.build/*" "$CLEANUP_DIR"
     end
 end
 
+set_color yellow
 echo "Running cleanup in $CLEANUP_DIR..."
+set_color normal
 
 rm -rf $CLEANUP_DIR
 mkdir -p $CLEANUP_DIR
