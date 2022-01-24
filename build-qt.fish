@@ -65,7 +65,7 @@ echo ""
 echo "CMake arguments:"
 set_color blue
 for arg in $EXTRA_CMAKE_ARGUMENTS
-    echo "$Blue  $arg$Color_Off"
+    echo "  $arg"
 end
 set_color normal
 
