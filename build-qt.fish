@@ -7,18 +7,24 @@ end
 
 cd $BASE_DIR
 
-set BUILD_TYPE $argv[1]
+set BUILD_TYPE (string join '-' (for f in $argv; echo $f; end | sort))
+
+echo "Build Type:" $BUILD_TYPE
+
 set EXTRA_CMAKE_ARGUMENTS
 
-if source "$BASE_DIR/kits/$BUILD_TYPE.fish" 2>/dev/null
-    echo "Succeeded loading build kit: $BUILD_TYPE"
-else
-    echo "The specified kit '$BUILD_TYPE' could not be found."
-    echo "Possible kits are:"
-    for f in (basename -s .fish $BASE_DIR/kits/*)
-        echo - $f
+echo ""
+for f in $argv
+    if source "$BASE_DIR/kits/$f.fish" 2>/dev/null
+        echo "Succeeded loading build kit: $f"
+    else
+        echo "The specified kit '$f' could not be found."
+        echo "Possible kits are:"
+        for f in (basename -s .fish $BASE_DIR/kits/*)
+            echo - $f
+        end
+        exit 1
     end
-    exit 1
 end
 
 set -g BUILD_DIR "$BASE_DIR/.build/$BUILD_TYPE"
@@ -27,27 +33,34 @@ set -g INSTALL_DIR "$BASE_DIR/nightly-$BUILD_TYPE/"(date -I)
 
 source $BASE_DIR/cleanup.fish
 
+echo ""
 echo "Setting up ccache dir..."
 export CCACHE_DIR=$BASE_DIR/.build-cache
-
 echo "Setting up CMake prefix path..."
 export CMAKE_PREFIX_PATH=/usr
-
-echo "Extra CMake arguments: $EXTRA_CMAKE_ARGUMENTS"
 
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 
 set -p EXTRA_CMAKE_ARGUMENTS -DCMAKE_INSTALL_PREFIX=$CURRENT_DIR/
 set -p EXTRA_CMAKE_ARGUMENTS -DQT_BUILD_SUBMODULES=(string join ';' $QT_MODULES)
-set -p EXTRA_CMAKE_ARGUMENTS -DCMAKE_BUILD_TYPE=Debug
 set -p EXTRA_CMAKE_ARGUMENTS -DQT_USE_CCACHE=ON
+set -p EXTRA_CMAKE_ARGUMENTS -DBUILD_WITH_PCH=OFF
 set -p EXTRA_CMAKE_ARGUMENTS -DCMAKE_CXX_FLAGS='-march=native'
 set -p EXTRA_CMAKE_ARGUMENTS -GNinja
 
+echo ""
 for arg in $EXTRA_CMAKE_ARGUMENTS
     echo "CMake arg: $arg"
 end
+
+echo -n "Will start building in 5 seconds, press Ctrl+C to cancel: "
+for sec in 5 4 3 2 1
+    echo -n "$sec..."
+    sleep 1
+end
+
+exit 1
 
 cmake $SRC_DIR $EXTRA_CMAKE_ARGUMENTS
 

@@ -7,6 +7,7 @@ end
 
 cd $BASE_DIR
 
+echo ""
 echo "Current Build Dir: $BUILD_DIR"
 echo "Base Build Dir: $BASE_DIR/.build/"
 
