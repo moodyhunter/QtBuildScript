@@ -38,14 +38,9 @@ set -g BUILD_DIR "$BASE_DIR/.build/$BUILD_TYPE"
 set -g CURRENT_DIR "$BASE_DIR/Current-$BUILD_TYPE"
 set -g INSTALL_DIR "$BASE_DIR/nightly-$BUILD_TYPE/"(date -I)
 
-source $BASE_DIR/cleanup.fish
-
 echo ""
 export CCACHE_DIR=$BASE_DIR/.build-cache
 echo "Using ccache dir: $CCACHE_DIR"
-
-mkdir -p $BUILD_DIR
-cd $BUILD_DIR
 
 set -p EXTRA_CMAKE_ARGUMENTS -DCMAKE_INSTALL_PREFIX=$CURRENT_DIR/
 set -p EXTRA_CMAKE_ARGUMENTS -DQT_USE_CCACHE=ON
@@ -80,6 +75,11 @@ for sec in 5 4 3 2 1
 end
 set_color normal
 echo ""
+
+source $BASE_DIR/cleanup.fish
+
+mkdir -p $BUILD_DIR
+cd $BUILD_DIR
 
 export CMAKE_PREFIX_PATH=/usr
 cmake $SRC_DIR $EXTRA_CMAKE_ARGUMENTS
