@@ -2,6 +2,10 @@
 
 A personal fish script to [cross-] compile Qt from source.
 
+## Demo
+
+![look at me](./images/build-android-demo.png)
+
 ## Usage
 
 ### Concepts
