@@ -1,0 +1,1 @@
+set -p EXTRA_CMAKE_ARGUMENTS -DCMAKE_CXX_FLAGS='-march=native'

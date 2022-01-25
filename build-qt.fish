@@ -6,37 +6,118 @@ if not source (dirname (status --current-filename))/utils/common.fish 2>/dev/nul
     exit 1
 end
 
-cd $BASE_DIR
+set -le arg_flag
+set -lp arg_flag (fish_opt --short=p --long=platform --required-val)
+set -lp arg_flag (fish_opt --short=a --long=arch --required-val)
+set -lp arg_flag (fish_opt --short=h --long=host-path --required-val)
+set -lp arg_flag (fish_opt --short=j --long=parallel --optional-val)
+set -lp arg_flag (fish_opt --short=1 --long=help --long-only)
+set -lp arg_flag (fish_opt --short=k --long=skip-cleanup)
 
-set EXTRA_CMAKE_ARGUMENTS
-set BUILD_TYPE (string join '-' (for f in $argv; echo $f; end | sort))
+argparse $arg_flag -- $argv || exit 1
 
-if [ "$BUILD_TYPE" = "" ]
-    set BUILD_TYPE default
+set SUPPORTED_PLATFORMS (basename -s .fish $BASE_DIR/platforms/* | sort)
+set SUPPORTED_KITS (basename -s .fish $BASE_DIR/kits/* | sort)
+
+if set -q _flag_help
+    echo (status --current-filename) "--help"
+    echo (status --current-filename) "[options] [kits]"
+    echo ""
+    echo "options:"
+    echo "  -p, --platform          Qt platforms, default='desktop', one of ["(string join ', ' $SUPPORTED_PLATFORMS)"]"
+    echo "  -a, --arch              Qt architecture, default='x86_64', platform-specific."
+    echo "  -h, --host-path         Path to manually specified Qt host directory, will detect automatically if unspecified."
+    echo "  -j, --parallel          Allow N jobs at once; automatically deduce from nproc with no argument."
+    echo "  -k, --skip-cleanup      Skip build directory cleanup."
+    echo ""
+    echo "kits:"
+    echo "  combination of:"
+    printf '  - %s\n' $SUPPORTED_KITS
+    exit 0
 end
 
-echo "Build Type:" $BUILD_TYPE
+set VAR_PARALLEL (if test -z "$_flag_parallel"; nproc; else; echo "$_flag_parallel"; end)
+set SKIP_CLEANUP (if set -q _flag_skip_cleanup; echo "1"; else; echo "0"; end)
+set QT_PLATFORM (if test -z "$_flag_platform"; echo "desktop"; else; echo "$_flag_platform"; end)
 
-for f in $argv
-    if source "$BASE_DIR/kits/$f.fish" 2>/dev/null
-        set_color green
-        echo -n "Loaded build kit: "
-        set_color normal
-        echo "$f"
-    else
+if [ "$QT_PLATFORM" != "desktop" ]
+    set QT_ARCH (if test -z "$_flag_arch"; echo "x86_64"; else; echo "$_flag_arch"; end)
+end
+
+
+if not contains -- $QT_PLATFORM $SUPPORTED_PLATFORMS
+    echo "Platform '$QT_PLATFORM' not supported."
+end
+
+for kit in $argv
+    if not contains -- $kit $SUPPORTED_KITS
         set_color red
-        echo "The specified kit '$f' could not be found."
-        echo "Possible kits are:"
-        for f in (basename -s .fish $BASE_DIR/kits/*)
-            echo - $f
-        end
+        echo "Build kit '$kit' not supported."
         exit 1
     end
 end
 
+if [ "$argv" = "" ]
+    set argv shared release
+end
+
+set BUILD_TYPE (string join '-' $QT_PLATFORM $QT_ARCH (string join '-' (for k in $argv; echo $k; end | sort | uniq)))
+
+echo "Qt kit identifier: $BUILD_TYPE"
+echo ""
+
+
+if [ "$QT_PLATFORM" != "desktop" ]
+    if not set -q _flag_host_path
+        set -l desktops $BASE_DIR/Current/desktop-*
+        if set -q desktops[1]
+            set QT_HOST_PATH $desktops[1]
+            set_color green
+            echo -n "Detected QT_HOST_PATH: "
+            set_color normal
+            echo $QT_HOST_PATH
+        else
+            set_color red
+            echo "Cannot automatically detect Qt host path, please specify one using -h option."
+            exit 1
+        end
+    end
+end
+
+if source "$BASE_DIR/platforms/$QT_PLATFORM.fish" 2>/dev/null
+    set_color green
+    echo -n "Platform initialised: "
+    set_color normal
+    echo "$QT_PLATFORM"
+else
+    set_color red
+    echo "Failed to initialise platform '$QT_PLATFORM'."
+    exit 1
+end
+
+for kit in $argv
+    if not contains -- $kit $SUPPORTED_KITS
+        set_color red
+        echo "Build kit '$kit' not supported."
+        exit 1
+    end
+
+    if source "$BASE_DIR/kits/$kit.fish" 2>/dev/null
+        set_color green
+        echo -n "Loaded kit: "
+        set_color normal
+        echo "$kit"
+    else
+        set_color red
+        echo "Failed to load '$kit'."
+        exit 1
+    end
+end
+
+cd $BASE_DIR
 set -g BUILD_DIR "$BASE_DIR/.build/$BUILD_TYPE"
-set -g CURRENT_DIR "$BASE_DIR/Current-$BUILD_TYPE"
-set -g INSTALL_DIR "$BASE_DIR/nightly-$BUILD_TYPE/"(date -I)
+set -g CURRENT_DIR "$BASE_DIR/Current/$BUILD_TYPE"
+set -g INSTALL_DIR "$BASE_DIR/nightly/$BUILD_TYPE/"(date -I)
 
 echo ""
 export CCACHE_DIR=$BASE_DIR/.build-cache
@@ -45,16 +126,7 @@ echo "Using ccache dir: $CCACHE_DIR"
 set -p EXTRA_CMAKE_ARGUMENTS -DCMAKE_INSTALL_PREFIX=$CURRENT_DIR/
 set -p EXTRA_CMAKE_ARGUMENTS -DQT_USE_CCACHE=ON
 set -p EXTRA_CMAKE_ARGUMENTS -DBUILD_WITH_PCH=OFF
-set -p EXTRA_CMAKE_ARGUMENTS -DCMAKE_CXX_FLAGS='-march=native'
 set -p EXTRA_CMAKE_ARGUMENTS -GNinja
-
-echo ""
-echo "Qt modules included:"
-set_color blue
-for m in $QT_MODULES
-    echo "  $m"
-end | sort
-set_color normal
 
 echo ""
 echo "CMake arguments:"
@@ -67,25 +139,39 @@ set_color normal
 set -p EXTRA_CMAKE_ARGUMENTS -DQT_BUILD_SUBMODULES=(string join ';' $QT_MODULES)
 
 echo ""
+if [ "$SKIP_CLEANUP" = "1" ]
+    set_color yellow
+    echo -n "Will not cleanup build directory: "
+    set_color normal
+    echo "$BUILD_DIR"
+end
+
 set_color yellow
+echo "Will build with $VAR_PARALLEL concurrent jobs."
 echo -n "Will start building in 5 seconds, press Ctrl+C to cancel: "
 for sec in 5 4 3 2 1
     echo -n "$sec..."
     sleep 1
 end
+
 set_color normal
 echo ""
 
-source $BASE_DIR/cleanup.fish
+mkdir -p "$BASE_DIR/Current/"
+mkdir -p "$BASE_DIR/nightly/"
+
+if [ "$SKIP_CLEANUP" = "0" ]
+    source $BASE_DIR/cleanup.fish
+end
 
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 
 export CMAKE_PREFIX_PATH=/usr
-cmake $SRC_DIR $EXTRA_CMAKE_ARGUMENTS
+cmake $SRC_DIR $EXTRA_CMAKE_ARGUMENTS || exit 1
 
 ccache -z
-cmake --build . --parallel || exit 1
+cmake --build . --parallel $VAR_PARALLEL || exit 1
 
 mv $INSTALL_DIR/ $INSTALL_DIR-backup/
 mkdir -p $BUILD_DIR
