@@ -24,11 +24,11 @@ if set -q _flag_help
     echo (status --current-filename) "[options] [kits]"
     echo ""
     echo "options:"
-    echo "  -p, --platform          Qt platforms, default='desktop', one of ["(string join ', ' $SUPPORTED_PLATFORMS)"]"
-    echo "  -a, --arch              Qt architecture, default='x86_64', platform-specific."
-    echo "  -h, --host-path         Path to manually specified Qt host directory, will detect automatically if unspecified."
-    echo "  -j, --parallel          Allow N jobs at once; automatically deduce from nproc with no argument."
-    echo "  -k, --skip-cleanup      Skip build directory cleanup."
+    echo "  -p, --platform          The target platform, default value is 'desktop', one of ["(string join ', ' $SUPPORTED_PLATFORMS)"]"
+    echo "  -a, --arch              Target architecture, default='x86_64', platform-specific."
+    echo "  -h, --host-path         Path to the Qt host build directory, can be automatically detected if unspecified."
+    echo "  -j, --parallel          Run N jobs at once, can be automatically detected from nproc if unspecified."
+    echo "  -k, --skip-cleanup      Skip cleanup the build directory."
     echo ""
     echo "kits:"
     echo "  combination of:"
@@ -167,7 +167,6 @@ end
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 
-export CMAKE_PREFIX_PATH=/usr
 cmake $SRC_DIR $EXTRA_CMAKE_ARGUMENTS || exit 1
 
 ccache -z

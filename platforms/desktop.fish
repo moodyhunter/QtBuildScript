@@ -1,1 +1,3 @@
+export CMAKE_PREFIX_PATH=/usr
+
 set -p EXTRA_CMAKE_ARGUMENTS -DCMAKE_CXX_FLAGS='-march=native'
