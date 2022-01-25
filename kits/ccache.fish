@@ -1,6 +1,5 @@
-echo ""
 export CCACHE_DIR=$BASE_DIR/.build-cache
-echo "Using ccache dir: $CCACHE_DIR"
+echo "  Using ccache directory: $CCACHE_DIR"
 
 set -p EXTRA_CMAKE_ARGUMENTS -DQT_USE_CCACHE=ON
 set -p EXTRA_CMAKE_ARGUMENTS -DBUILD_WITH_PCH=OFF

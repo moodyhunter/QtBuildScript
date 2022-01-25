@@ -64,11 +64,15 @@ end
 # Prepend base-kits if exists
 if test -e $BASE_DIR/.base-kits
     set_color green
-    echo -n "Loading base kits from: "
+    echo -n "Applying base kits from: "
     set_color normal
     echo "$BASE_DIR/.base-kits"
 
     for k in (cat $BASE_DIR/.base-kits)
+        set_color green
+        echo -n "  Applied: "
+        set_color normal
+        echo "$k"
         set -p argv "$k"
     end
 end
@@ -76,18 +80,25 @@ end
 # If kits are empty, apply default kits.
 if test -z "$argv"
     set_color blue
-    echo -n "Reading default kits from: "
+    echo -n "Applying default kits from: "
     set_color normal
     echo "$BASE_DIR/.default-kits"
-
-    set argv (cat $BASE_DIR/.default-kits)
+    set argv
+    for k in (cat $BASE_DIR/.default-kits)
+        set_color green
+        echo -n "  Applied: "
+        set_color normal
+        echo "$k"
+        set -p argv "$k"
+    end
     set_color normal
 end
 
 
 set BUILD_TYPE (string join '-' -- "$QT_PLATFORM" $QT_ARCH (string join '-' (for k in $argv; echo $k; end | sort | uniq)))
 
-echo "Qt kit identifier: $BUILD_TYPE"
+echo ""
+echo "Kit Identifier: $BUILD_TYPE"
 echo ""
 
 if [ "$QT_PLATFORM" != "desktop" ]
@@ -120,6 +131,10 @@ else
     exit 1
 end
 
+set_color green
+echo "Loading Kits..."
+set_color normal
+
 for kit in $argv
     if not contains -- $kit $SUPPORTED_KITS
         set_color red
@@ -127,9 +142,10 @@ for kit in $argv
         exit 1
     end
 
+    set_color blue
     if source "$BASE_DIR/kits/$kit.fish" 2>/dev/null
         set_color green
-        echo -n "Loaded kit: "
+        echo -n "  Loaded: "
         set_color normal
         echo "$kit"
     else
