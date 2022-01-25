@@ -8,11 +8,19 @@ if [ "$ANDROID_NDK_ROOT" = "" ]
     echo "Failed to determine Android NDK Path, please define 'ANDROID_NDK_ROOT' environment variable."
 end
 
-if not contains -- $QT_ARCH arm64-v8a armeabi-v7a x86 x86_64
+set SUPPORTED_ANDROID_ARCH arm64-v8a armeabi-v7a x86 x86_64
+
+if not contains -- $QT_ARCH $SUPPORTED_ANDROID_ARCH
+    echo ""
     set_color red
     echo -n "Invalid architecture: "
     set_color normal
     echo $QT_ARCH
+    echo "Supported architectures:"
+    set_color blue
+    printf '  - %s\n' $SUPPORTED_ANDROID_ARCH
+    set_color normal
+    echo ""
     exit 1
 end
 
