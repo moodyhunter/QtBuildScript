@@ -6,6 +6,8 @@ if not source (dirname (status --current-filename))/utils/common.fish 2>/dev/nul
     exit 1
 end
 
+cd $BASE_DIR
+
 set -le arg_flag
 set -lp arg_flag (fish_opt --short=p --long=platform --required-val)
 set -lp arg_flag (fish_opt --short=a --long=arch --required-val)
@@ -45,27 +47,48 @@ if [ "$QT_PLATFORM" != "desktop" ]
 end
 
 
-if not contains -- $QT_PLATFORM $SUPPORTED_PLATFORMS
+if not contains -- "$QT_PLATFORM" $SUPPORTED_PLATFORMS
+    set_color red
     echo "Platform '$QT_PLATFORM' not supported."
+    exit 1
 end
 
 for kit in $argv
-    if not contains -- $kit $SUPPORTED_KITS
+    if not contains -- "$kit" $SUPPORTED_KITS
         set_color red
         echo "Build kit '$kit' not supported."
         exit 1
     end
 end
 
-if [ "$argv" = "" ]
-    set argv shared release
+# Prepend base-kits if exists
+if test -e $BASE_DIR/.base-kits
+    set_color green
+    echo -n "Loading base kits from: "
+    set_color normal
+    echo "$BASE_DIR/.base-kits"
+
+    for k in (cat $BASE_DIR/.base-kits)
+        set -p argv "$k"
+    end
 end
 
-set BUILD_TYPE (string join '-' $QT_PLATFORM $QT_ARCH (string join '-' (for k in $argv; echo $k; end | sort | uniq)))
+# If kits are empty, apply default kits.
+if test -z "$argv"
+    set_color blue
+    echo -n "Reading default kits from: "
+    set_color normal
+    echo "$BASE_DIR/.default-kits"
+
+    set argv (cat $BASE_DIR/.default-kits)
+    set_color normal
+end
+
+
+set BUILD_TYPE (string join '-' -- "$QT_PLATFORM" $QT_ARCH (string join '-' (for k in $argv; echo $k; end | sort | uniq)))
 
 echo "Qt kit identifier: $BUILD_TYPE"
 echo ""
-
 
 if [ "$QT_PLATFORM" != "desktop" ]
     if not set -q _flag_host_path
@@ -81,6 +104,8 @@ if [ "$QT_PLATFORM" != "desktop" ]
             echo "Cannot automatically detect Qt host path, please specify one using -h option."
             exit 1
         end
+    else
+        set QT_HOST_PATH $_flag_host_path
     end
 end
 
@@ -114,18 +139,11 @@ for kit in $argv
     end
 end
 
-cd $BASE_DIR
 set -g BUILD_DIR "$BASE_DIR/.build/$BUILD_TYPE"
 set -g CURRENT_DIR "$BASE_DIR/Current/$BUILD_TYPE"
 set -g INSTALL_DIR "$BASE_DIR/nightly/$BUILD_TYPE/"(date -I)
 
-echo ""
-export CCACHE_DIR=$BASE_DIR/.build-cache
-echo "Using ccache dir: $CCACHE_DIR"
-
 set -p EXTRA_CMAKE_ARGUMENTS -DCMAKE_INSTALL_PREFIX=$CURRENT_DIR/
-set -p EXTRA_CMAKE_ARGUMENTS -DQT_USE_CCACHE=ON
-set -p EXTRA_CMAKE_ARGUMENTS -DBUILD_WITH_PCH=OFF
 set -p EXTRA_CMAKE_ARGUMENTS -GNinja
 
 echo ""
@@ -136,7 +154,7 @@ for arg in $EXTRA_CMAKE_ARGUMENTS
 end
 set_color normal
 
-set -p EXTRA_CMAKE_ARGUMENTS -DQT_BUILD_SUBMODULES=(string join ';' $QT_MODULES)
+set -p EXTRA_CMAKE_ARGUMENTS -DQT_BUILD_SUBMODULES=(string join ';' -- $QT_MODULES)
 
 echo ""
 if [ "$SKIP_CLEANUP" = "1" ]

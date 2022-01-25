@@ -22,7 +22,13 @@ A personal fish script to [cross-] compile Qt from source.
 ### Defaults
 
 Default Platform: `desktop`
-Default KitSet: `ccache`, `shared`, `release`
+Default KitSet: `ccache`, `shared`, `release` (See `./.default-kits`)
+
+### Kits Applying Order
+
+1. Apply base kits, stored in `./.base-kits`
+2. Apply kits given from the argument
+3. If kits are still empty, apply default kits
 
 ## Example
 

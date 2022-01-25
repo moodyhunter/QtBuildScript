@@ -10,12 +10,12 @@ end
 
 set SUPPORTED_ANDROID_ARCH arm64-v8a armeabi-v7a x86 x86_64
 
-if not contains -- $QT_ARCH $SUPPORTED_ANDROID_ARCH
+if not contains -- "$QT_ARCH" $SUPPORTED_ANDROID_ARCH
     echo ""
     set_color red
     echo -n "Invalid architecture: "
     set_color normal
-    echo $QT_ARCH
+    echo "$QT_ARCH"
     echo "Supported architectures:"
     set_color blue
     printf '  - %s\n' $SUPPORTED_ANDROID_ARCH

@@ -1,6 +1,8 @@
 .build/
 .build-cache/
 
+.base-kits
+
 Current/
 nightly/
 
