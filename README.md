@@ -18,6 +18,12 @@ A personal fish script to [cross-] compile Qt from source.
 -j, --parallel          Run N jobs at once, can be automatically detected from nproc if unspecified.
 -k, --skip-cleanup      Skip cleanup the build directory.
 ```
+
+### Defaults
+
+Default Platform: `desktop`
+Default KitSet: `ccache`, `shared`, `release`
+
 ## Example
 
 - Compile Qt for Linux desktop, a shared library debug build.
