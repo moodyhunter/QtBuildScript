@@ -1,6 +1,12 @@
 # QtBuildScript
 
-A personal fish script to [cross-] compile Qt from source.
+A personal [fish-shell](https://github.com/fish-shell/fish-shell) script to [cross-] compile Qt from source.
+
+Supported Platforms:
+
+- Linux
+- Android
+- WebAssembly
 
 ## Demo
 
@@ -78,6 +84,14 @@ Default KitSet: `ccache`, `shared`, `release` (See `./.default-kits`)
 ./build-qt.fish -p android -a armeabi-v7a static release -k -h /my/own/qt/installation
 # or:
 # ./build-qt.fish --platform=android --arch=armeabi-v7a static release --skip-cleanup --host-path=/my/own/qt/installation
+```
+
+- Compile Qt for WASM, with static build (you can't use shared build anyway)
+
+```bash
+./build-qt.fish -p wasm static
+# or:
+# ./build-qt.fish --platform=wasm static
 ```
 
 ## License
