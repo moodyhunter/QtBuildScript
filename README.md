@@ -31,8 +31,8 @@ Supported Platforms:
 
 ### Defaults
 
-Default Platform: `desktop`
-Default KitSet: `ccache`, `shared`, `release` (See `./.default-kits`)
+- Default Platform: `desktop`
+- Default KitSet: `ccache`, `shared`, `release` (See `./.default-kits`)
 
 ### Kits Applying Order
 
