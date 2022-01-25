@@ -40,12 +40,28 @@ A personal fish script to [cross-] compile Qt from source.
 # ./build-qt.fish --platform=desktop shared debug
 ```
 
-- Compile Qt for Android, a static debug build
+- Compile Qt for Android (default architecture x86_64), a static debug build, with parallel 128
 
 ```bash
-./build-qt.fish -p android static debug
+./build-qt.fish -p android static debug -j128
 # or:
-# ./build-qt.fish --platform=android static debug
+# ./build-qt.fish --platform=android static debug --parallel=128
+```
+
+- Compile Qt for Android with architecture `arm64-v8a`, a static release build, keep previous build directory
+
+```bash
+./build-qt.fish -p android -a arm64-v8a static release -k
+# or:
+# ./build-qt.fish --platform=android --arch=arm64-v8a static release --skip-cleanup
+```
+
+- Compile Qt for Android with architecture `armeabi-v7a`, a static release build, keep previous build directory, with custom Qt host path
+
+```bash
+./build-qt.fish -p android -a armeabi-v7a static release -k -h /my/own/qt/installation
+# or:
+# ./build-qt.fish --platform=android --arch=armeabi-v7a static release --skip-cleanup --host-path=/my/own/qt/installation
 ```
 
 ## License
