@@ -3,6 +3,7 @@ if [ "$EMSCRIPTEN_ROOT" = "" ]
     echo "Failed to determine Emscripten Root Path, please define 'EMSCRIPTEN_ROOT' environment variable."
 end
 
+set -e QT_ARCH
 set BUILD_KITS (string match -v shared $BUILD_KITS)
 set -p BUILD_KITS static
 

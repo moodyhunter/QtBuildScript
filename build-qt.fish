@@ -41,11 +41,7 @@ end
 set VAR_PARALLEL (if test -z "$_flag_parallel"; nproc; else; echo "$_flag_parallel"; end)
 set SKIP_CLEANUP (if set -q _flag_skip_cleanup; echo "1"; else; echo "0"; end)
 set QT_PLATFORM (if test -z "$_flag_platform"; echo "desktop"; else; echo "$_flag_platform"; end)
-
-if [ "$QT_PLATFORM" != "desktop" ]
-    set QT_ARCH (if test -z "$_flag_arch"; echo "x86_64"; else; echo "$_flag_arch"; end)
-end
-
+set QT_ARCH (if test -z "$_flag_arch"; echo "x86_64"; else; echo "$_flag_arch"; end)
 
 if not contains -- "$QT_PLATFORM" $SUPPORTED_PLATFORMS
     set_color red
@@ -126,7 +122,9 @@ else
     exit 1
 end
 
-set BUILD_TYPE (string join '-' -- "$QT_PLATFORM" $QT_ARCH (string join '-' (for k in $BUILD_KITS; echo $k; end | sort | uniq)))
+# Remove ccache from display kits.
+set BUILD_KITS_DISPLAY (string match -v ccache $BUILD_KITS)
+set BUILD_TYPE (string join '-' -- "$QT_PLATFORM" $QT_ARCH (string join '-' (for k in $BUILD_KITS_DISPLAY; echo $k; end | sort | uniq)))
 
 echo ""
 echo "Kit Identifier: $BUILD_TYPE"
