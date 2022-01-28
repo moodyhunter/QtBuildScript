@@ -18,8 +18,8 @@ set -lp arg_flag (fish_opt --short=k --long=skip-cleanup)
 
 argparse $arg_flag -- $argv || exit 1
 
-set SUPPORTED_PLATFORMS (basename -s .fish $BASE_DIR/platforms/* | sort)
-set SUPPORTED_KITS (basename -s .fish $BASE_DIR/kits/* | sort)
+set SUPPORTED_PLATFORMS (basename -s .fish $BASE_DIR/utils/platforms/* | sort)
+set SUPPORTED_KITS (basename -s .fish $BASE_DIR/utils/kits/* | sort)
 
 if set -q _flag_help
     echo (status --current-filename) "--help"
@@ -94,18 +94,11 @@ if test -z "$argv"
     set_color normal
 end
 
-
-set BUILD_TYPE (string join '-' -- "$QT_PLATFORM" $QT_ARCH (string join '-' (for k in $argv; echo $k; end | sort | uniq)))
-
-echo ""
-echo "Kit Identifier: $BUILD_TYPE"
-echo ""
-
 if [ "$QT_PLATFORM" != "desktop" ]
     if not set -q _flag_host_path
         set -l desktops $BASE_DIR/Current/desktop-*
         if set -q desktops[1]
-            set QT_HOST_PATH $desktops[1]
+            set QT_HOST_PATH (realpath $desktops[1])
             set_color green
             echo -n "Detected QT_HOST_PATH: "
             set_color normal
@@ -120,7 +113,9 @@ if [ "$QT_PLATFORM" != "desktop" ]
     end
 end
 
-if source "$BASE_DIR/platforms/$QT_PLATFORM.fish" 2>/dev/null
+set BUILD_KITS $argv
+
+if source "$BASE_DIR/utils/platforms/$QT_PLATFORM.fish" 2>/dev/null
     set_color green
     echo -n "Platform initialised: "
     set_color normal
@@ -131,11 +126,17 @@ else
     exit 1
 end
 
+set BUILD_TYPE (string join '-' -- "$QT_PLATFORM" $QT_ARCH (string join '-' (for k in $BUILD_KITS; echo $k; end | sort | uniq)))
+
+echo ""
+echo "Kit Identifier: $BUILD_TYPE"
+echo ""
+
 set_color green
 echo "Loading Kits..."
 set_color normal
 
-for kit in $argv
+for kit in $BUILD_KITS
     if not contains -- $kit $SUPPORTED_KITS
         set_color red
         echo "Build kit '$kit' not supported."
@@ -143,7 +144,7 @@ for kit in $argv
     end
 
     set_color blue
-    if source "$BASE_DIR/kits/$kit.fish" 2>/dev/null
+    if source "$BASE_DIR/utils/kits/$kit.fish" 2>/dev/null
         set_color green
         echo -n "  Loaded: "
         set_color normal
@@ -156,10 +157,9 @@ for kit in $argv
 end
 
 set -g BUILD_DIR "$BASE_DIR/.build/$BUILD_TYPE"
-set -g CURRENT_DIR "$BASE_DIR/Current/$BUILD_TYPE"
 set -g INSTALL_DIR "$BASE_DIR/nightly/$BUILD_TYPE/"(date -I)
 
-set -p EXTRA_CMAKE_ARGUMENTS -DCMAKE_INSTALL_PREFIX=$CURRENT_DIR/
+set -p EXTRA_CMAKE_ARGUMENTS -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/
 set -p EXTRA_CMAKE_ARGUMENTS -GNinja
 
 echo ""
@@ -195,7 +195,7 @@ mkdir -p "$BASE_DIR/Current/"
 mkdir -p "$BASE_DIR/nightly/"
 
 if [ "$SKIP_CLEANUP" = "0" ]
-    source $BASE_DIR/cleanup.fish
+    source $BASE_DIR/utils/cleanup.fish
 end
 
 mkdir -p $BUILD_DIR
@@ -207,21 +207,23 @@ ccache -z
 cmake --build . --parallel $VAR_PARALLEL || exit 1
 
 mv $INSTALL_DIR/ $INSTALL_DIR-backup/
-mkdir -p $BUILD_DIR
 mkdir -p $INSTALL_DIR
-rm $CURRENT_DIR
-ln -svf $INSTALL_DIR $CURRENT_DIR
 
 cmake --install . || exit 1
 
-echo "build time:" (date) >$CURRENT_DIR/modules.info
+
+echo "build time:" (date) >$INSTALL_DIR/modules.info
 
 for d in $QT_MODULES
     echo $d "->" (git --git-dir $BASE_DIR/qt/$d/.git/ log -1 --format=%H)
-end >>$CURRENT_DIR/modules.info
+end >>$INSTALL_DIR/modules.info
 
-ccache -sv | tee $CURRENT_DIR/cache.info
+ccache -sv | tee $INSTALL_DIR/cache.info
 
 rm -rf $INSTALL_DIR-backup/
 
-echo "Done."
+set -g CURRENT_DIR "$BASE_DIR/Current/$BUILD_TYPE"
+rm $CURRENT_DIR
+ln -svf $INSTALL_DIR $CURRENT_DIR
+
+echo "Done"
