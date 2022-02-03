@@ -123,7 +123,9 @@ else
 end
 
 # Remove ccache from display kits.
-set BUILD_KITS_DISPLAY (string match -v ccache $BUILD_KITS)
+set BUILD_KITS_DISPLAY $BUILD_KITS
+set BUILD_KITS_DISPLAY (string match -v ccache $BUILD_KITS_DISPLAY)
+set BUILD_KITS_DISPLAY (string match -v cpp20 $BUILD_KITS_DISPLAY)
 set BUILD_TYPE (string join '-' -- "$QT_PLATFORM" $QT_ARCH (string join '-' (for k in $BUILD_KITS_DISPLAY; echo $k; end | sort | uniq)))
 
 echo ""

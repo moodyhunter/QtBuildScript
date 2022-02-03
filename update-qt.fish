@@ -8,6 +8,8 @@ end
 
 cd $SRC_DIR
 
+git pull --verbose --rebase
+
 ./init-repository \
     --module-subset=(string join ',' $QT_MODULES) \
     -f \
