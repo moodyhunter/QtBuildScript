@@ -13,4 +13,5 @@ git pull --verbose --rebase
 ./init-repository \
     --module-subset=(string join ',' $QT_MODULES) \
     -f \
-    --branch
+    --force-hooks \
+    --branch $argv
