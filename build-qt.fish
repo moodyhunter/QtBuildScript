@@ -1,5 +1,7 @@
 #!/bin/fish
 
+set -g argv $argv
+
 if not source (dirname (status --current-filename))/utils/common.fish 2>/dev/null
     set_color red
     echo "Initialization failed."
@@ -22,7 +24,7 @@ set SUPPORTED_PLATFORMS (basename -s .fish $BASE_DIR/utils/platforms/* | sort)
 set SUPPORTED_KITS (basename -s .fish $BASE_DIR/utils/kits/* | sort)
 
 if set -q _flag_help
-    echo (status --current-filename) "--help"
+    echo (status --current-filename) --help
     echo (status --current-filename) "[options] [kits]"
     echo ""
     echo "options:"
@@ -90,7 +92,7 @@ if test -z "$argv"
     set_color normal
 end
 
-if [ "$QT_PLATFORM" != "desktop" ]
+if [ "$QT_PLATFORM" != desktop ]
     if not set -q _flag_host_path
         set -l desktops $BASE_DIR/Current/desktop-*
         if set -q desktops[1]
@@ -109,7 +111,14 @@ if [ "$QT_PLATFORM" != "desktop" ]
     end
 end
 
-set BUILD_KITS $argv
+echo ""
+
+set -g BUILD_KITS $argv
+lastdedup BUILD_KITS
+set_color green && echo -n "Kits: " && set_color normal
+echo $BUILD_KITS
+
+echo ""
 
 if source "$BASE_DIR/utils/platforms/$QT_PLATFORM.fish" 2>/dev/null
     set_color green
@@ -122,16 +131,12 @@ else
     exit 1
 end
 
+echo ""
+
 # Remove ccache from display kits.
 set BUILD_KITS_DISPLAY $BUILD_KITS
 set BUILD_KITS_DISPLAY (string match -v ccache $BUILD_KITS_DISPLAY)
 set BUILD_KITS_DISPLAY (string match -v cpp20 $BUILD_KITS_DISPLAY)
-set BUILD_TYPE (string join '-' -- "$QT_PLATFORM" $QT_ARCH (string join '-' (for k in $BUILD_KITS_DISPLAY; echo $k; end | sort | uniq)))
-
-echo ""
-echo "Kit Identifier: $BUILD_TYPE"
-echo ""
-
 set_color green
 echo "Loading Kits..."
 set_color normal
@@ -156,6 +161,12 @@ for kit in $BUILD_KITS
     end
 end
 
+set BUILD_TYPE (string join '-' -- "$QT_PLATFORM" $QT_ARCH (string join '-' (for k in $BUILD_KITS_DISPLAY; echo $k; end | sort | uniq)))
+
+echo ""
+set_color green && echo -n "Final Build Identifier: " && set_color normal
+echo $BUILD_TYPE
+
 set -g BUILD_DIR "$BASE_DIR/.build/$BUILD_TYPE"
 set -g INSTALL_DIR "$BASE_DIR/nightly/$BUILD_TYPE/"(date -I)
 
@@ -173,7 +184,7 @@ set_color normal
 set -p EXTRA_CMAKE_ARGUMENTS -DQT_BUILD_SUBMODULES=(string join ';' -- $QT_MODULES)
 
 echo ""
-if [ "$SKIP_CLEANUP" = "1" ]
+if [ "$SKIP_CLEANUP" = 1 ]
     set_color yellow
     echo -n "Will not cleanup build directory: "
     set_color normal
@@ -194,7 +205,7 @@ echo ""
 mkdir -p "$BASE_DIR/Current/"
 mkdir -p "$BASE_DIR/nightly/"
 
-if [ "$SKIP_CLEANUP" = "0" ]
+if [ "$SKIP_CLEANUP" = 0 ]
     source $BASE_DIR/utils/cleanup.fish
 end
 
@@ -226,4 +237,4 @@ set -g CURRENT_DIR "$BASE_DIR/Current/$BUILD_TYPE"
 rm $CURRENT_DIR
 ln -svf $INSTALL_DIR $CURRENT_DIR
 
-echo "Done"
+echo Done
