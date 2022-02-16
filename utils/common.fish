@@ -1,6 +1,6 @@
 #!/bin/fish
 
-set -g BASE_DIR (cd (dirname (status -f))/../; and pwd)
+set -g BASE_DIR (realpath (cd (dirname (status -f))/../; and pwd))
 set -g SRC_DIR "$BASE_DIR/qt"
 
 set -g QT_MODULES qtbase qtsvg qtshadertools qtimageformats \
