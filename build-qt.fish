@@ -173,11 +173,11 @@ set -g INSTALL_DIR "$BASE_DIR/nightly/$BUILD_TYPE/"(date -I)
 set -p EXTRA_CMAKE_ARGUMENTS -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/
 set -p EXTRA_CMAKE_ARGUMENTS -GNinja
 
-for x in (echo $CMAKE_ARGUMENTS_PREPEND | sed 's/ /\n/g')
+for x in (echo -n $CMAKE_ARGUMENTS_PREPEND | sed 's/ /\n/g')
     set -p EXTRA_CMAKE_ARGUMENTS $x
 end
 
-for x in (echo $CMAKE_ARGUMENTS_APPEND | sed 's/ /\n/g')
+for x in (echo -n $CMAKE_ARGUMENTS_APPEND | sed 's/ /\n/g')
     set -a EXTRA_CMAKE_ARGUMENTS $x
 end
 
