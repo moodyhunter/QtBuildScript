@@ -1,0 +1,117 @@
+From fc0278aee65c181e58e87f6de6f7cdaaa4b7e354 Mon Sep 17 00:00:00 2001
+From: Moody Liu <mooodyhunter@outlook.com>
+Date: Fri, 18 Feb 2022 14:53:04 +0000
+Subject: [PATCH] fix API compatibility with FFmpeg v5
+
+these 4 functions avcodec_find_{en,de}coder{,_by_name}
+now return a pointer to const AVCodec.
+
+Change-Id: I693d6e0a9bc4d68e485eb4eb4f35b5ec8496fd65
+---
+ src/plugins/multimedia/ffmpeg/qffmpegdecoder.cpp         | 2 +-
+ src/plugins/multimedia/ffmpeg/qffmpeghwaccel.cpp         | 4 ++--
+ src/plugins/multimedia/ffmpeg/qffmpeghwaccel_p.h         | 2 +-
+ src/plugins/multimedia/ffmpeg/qffmpegmediaformatinfo.cpp | 8 +++++---
+ src/plugins/multimedia/ffmpeg/qffmpegmediaformatinfo_p.h | 4 ++--
+ 5 files changed, 11 insertions(+), 9 deletions(-)
+
+diff --git a/src/plugins/multimedia/ffmpeg/qffmpegdecoder.cpp b/src/plugins/multimedia/ffmpeg/qffmpegdecoder.cpp
+index 4b77473cf..c621514ab 100644
+--- a/src/plugins/multimedia/ffmpeg/qffmpegdecoder.cpp
++++ b/src/plugins/multimedia/ffmpeg/qffmpegdecoder.cpp
+@@ -91,7 +91,7 @@ Codec::Codec(AVFormatContext *format, int streamIndex, QRhi *rhi)
+     Q_ASSERT(streamIndex >= 0 && streamIndex < (int)format->nb_streams);
+ 
+     AVStream *stream = format->streams[streamIndex];
+-    AVCodec *decoder = avcodec_find_decoder(stream->codecpar->codec_id);
++    const AVCodec *decoder = avcodec_find_decoder(stream->codecpar->codec_id);
+     if (!decoder) {
+         qCDebug(qLcDecoder) << "Failed to find a valid FFmpeg decoder";
+         return;
+diff --git a/src/plugins/multimedia/ffmpeg/qffmpeghwaccel.cpp b/src/plugins/multimedia/ffmpeg/qffmpeghwaccel.cpp
+index d8445ac26..a9b8351cd 100644
+--- a/src/plugins/multimedia/ffmpeg/qffmpeghwaccel.cpp
++++ b/src/plugins/multimedia/ffmpeg/qffmpeghwaccel.cpp
+@@ -86,7 +86,7 @@ static AVBufferRef *loadHWContext(const AVCodecHWConfig *config)
+     return nullptr;
+ }
+ 
+-static AVBufferRef *hardwareContextForCodec(AVCodec *codec)
++static AVBufferRef *hardwareContextForCodec(const AVCodec *codec)
+ {
+     qDebug() << "Checking HW acceleration for decoder" << codec->name;
+ 
+@@ -190,7 +190,7 @@ AVPixelFormat QFFmpeg::HWAccelBackend::format(AVFrame *frame) const
+     return AVPixelFormat(hwFramesContext->sw_format);
+ }
+ 
+-HWAccel::HWAccel(AVCodec *codec)
++HWAccel::HWAccel(const AVCodec *codec)
+     : HWAccel(codec->type == AVMEDIA_TYPE_VIDEO ? hardwareContextForCodec(codec) : nullptr)
+ {
+ }
+diff --git a/src/plugins/multimedia/ffmpeg/qffmpeghwaccel_p.h b/src/plugins/multimedia/ffmpeg/qffmpeghwaccel_p.h
+index 7297eaa8d..e32eb19b2 100644
+--- a/src/plugins/multimedia/ffmpeg/qffmpeghwaccel_p.h
++++ b/src/plugins/multimedia/ffmpeg/qffmpeghwaccel_p.h
+@@ -92,7 +92,7 @@ class HWAccel
+ {
+ public:
+     HWAccel() = default;
+-    explicit HWAccel(AVCodec *codec);
++    explicit HWAccel(const AVCodec *codec);
+     explicit HWAccel(AVBufferRef *hwDeviceContext);
+     ~HWAccel() = default;
+ 
+diff --git a/src/plugins/multimedia/ffmpeg/qffmpegmediaformatinfo.cpp b/src/plugins/multimedia/ffmpeg/qffmpegmediaformatinfo.cpp
+index d122b6e7f..dc6ce4a70 100644
+--- a/src/plugins/multimedia/ffmpeg/qffmpegmediaformatinfo.cpp
++++ b/src/plugins/multimedia/ffmpeg/qffmpegmediaformatinfo.cpp
+@@ -141,7 +141,7 @@ static QMediaFormat::FileFormat formatForAVFormat(AVFormat *format)
+     return QMediaFormat::UnspecifiedFormat;
+ }
+ 
+-static AVOutputFormat *avFormatForFormat(QMediaFormat::FileFormat format)
++static const AVOutputFormat *avFormatForFormat(QMediaFormat::FileFormat format)
+ {
+     if (format == QMediaFormat::QuickTime || format == QMediaFormat::Mpeg4Audio)
+         format = QMediaFormat::MPEG4;
+@@ -288,7 +288,8 @@ QMediaFormat::VideoCodec QFFmpegMediaFormatInfo::videoCodecForAVCodecId(AVCodecI
+     return QMediaFormat::VideoCodec::Unspecified;
+ }
+ 
+-QMediaFormat::FileFormat QFFmpegMediaFormatInfo::fileFormatForAVInputFormat(AVInputFormat *format)
++QMediaFormat::FileFormat
++QFFmpegMediaFormatInfo::fileFormatForAVInputFormat(const AVInputFormat *format)
+ {
+     // Seems like FFmpeg uses different names for muxers and demuxers of the same format.
+     // that makes it somewhat cumbersome to detect things correctly.
+@@ -328,7 +329,8 @@ QMediaFormat::FileFormat QFFmpegMediaFormatInfo::fileFormatForAVInputFormat(AVIn
+     return QMediaFormat::UnspecifiedFormat;
+ }
+ 
+-AVOutputFormat *QFFmpegMediaFormatInfo::outputFormatForFileFormat(QMediaFormat::FileFormat format)
++const AVOutputFormat *
++QFFmpegMediaFormatInfo::outputFormatForFileFormat(QMediaFormat::FileFormat format)
+ {
+     return avFormatForFormat(format);
+ }
+diff --git a/src/plugins/multimedia/ffmpeg/qffmpegmediaformatinfo_p.h b/src/plugins/multimedia/ffmpeg/qffmpegmediaformatinfo_p.h
+index cfc148f2d..82fbe99c4 100644
+--- a/src/plugins/multimedia/ffmpeg/qffmpegmediaformatinfo_p.h
++++ b/src/plugins/multimedia/ffmpeg/qffmpegmediaformatinfo_p.h
+@@ -67,9 +67,9 @@ public:
+ 
+     static QMediaFormat::VideoCodec videoCodecForAVCodecId(AVCodecID id);
+     static QMediaFormat::AudioCodec audioCodecForAVCodecId(AVCodecID id);
+-    static QMediaFormat::FileFormat fileFormatForAVInputFormat(AVInputFormat *format);
++    static QMediaFormat::FileFormat fileFormatForAVInputFormat(const AVInputFormat *format);
+ 
+-    static AVOutputFormat *outputFormatForFileFormat(QMediaFormat::FileFormat format);
++    static const AVOutputFormat *outputFormatForFileFormat(QMediaFormat::FileFormat format);
+ 
+     static AVCodecID codecIdForVideoCodec(QMediaFormat::VideoCodec codec);
+     static AVCodecID codecIdForAudioCodec(QMediaFormat::AudioCodec codec);
+-- 
+2.35.1
+
