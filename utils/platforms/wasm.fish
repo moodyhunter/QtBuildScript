@@ -13,3 +13,5 @@ set -p EXTRA_CMAKE_ARGUMENTS "-DQT_HOST_PATH=$QT_HOST_PATH"
 # Neither QDoc nor clang-based lupdate needs to be built, so setting them off is safe.
 set -p EXTRA_CMAKE_ARGUMENTS "-DFEATURE_clangcpp=OFF"
 set -p EXTRA_CMAKE_ARGUMENTS "-DFEATURE_clang=OFF"
+
+set -p EXTRA_EXPORT_VARIABLES EMSCRIPTEN_ROOT
