@@ -227,7 +227,6 @@ if [ "$SKIP_CLEANUP" = 1 ]
     echo "$BUILD_DIR"
 end
 
-
 mkdir -p "$BASE_DIR/Current/"
 mkdir -p "$BASE_DIR/nightly/"
 

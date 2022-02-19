@@ -29,5 +29,9 @@ set_color yellow
 echo "Running cleanup in $CLEANUP_DIR..."
 set_color normal
 
-rm -rf $CLEANUP_DIR
+if test -d "$CLEANUP_DIR"
+    # Delete folder if exists
+    rm -rf $CLEANUP_DIR
+end
+
 mkdir -p $CLEANUP_DIR
