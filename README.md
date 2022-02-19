@@ -27,6 +27,7 @@ Supported Platforms:
 -h, --host-path         Path to the Qt host build directory, can be automatically detected if unspecified.
 -j, --parallel          Run N jobs at once, can be automatically detected from nproc if unspecified.
 -k, --skip-cleanup      Skip cleanup the build directory.
+-E, --export            Export build configuration to a script.
 ```
 
 ### Defaults
