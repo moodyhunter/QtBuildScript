@@ -276,7 +276,7 @@ else
     echo '# mkdir -p $BUILD_DIR && cd $BUILD_DIR' >>"$EXPORT_PATH"
     echo '# cmake $SRC_DIR $EXTRA_CMAKE_ARGUMENTS' >>"$EXPORT_PATH"
     echo '# cmake --build . --parallel $PARALLEL_LEVEL' >>"$EXPORT_PATH"
-    echo "#" >>"$EXPORT_PATH"
+    echo '# cd $BASE_DIR' >>"$EXPORT_PATH"
     echo '# Then run ./utils/finalise.fish to perform finalisation.' >>"$EXPORT_PATH"
     echo "" >>"$EXPORT_PATH"
     echo "echo 'Initializing Qt Build Environment....'" >>"$EXPORT_PATH"
