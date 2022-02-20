@@ -316,5 +316,6 @@ if test -z "$EXPORT_PATH"
     cmake $SRC_DIR $EXTRA_CMAKE_ARGUMENTS || exit 1
     cmake --build . --parallel $PARALLEL_LEVEL || exit 1
 
+    set QT_BUILDSCRIPT_EXPORTED 1
     source $BASE_DIR/utils/finalise.fish || exit 1
 end
