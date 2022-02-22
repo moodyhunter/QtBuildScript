@@ -8,7 +8,7 @@ end
 
 cd $SRC_DIR
 
-git pull --verbose --rebase
+git pull --rebase --verbose --autostash
 
 ./init-repository \
     --module-subset=(string join ',' $QT_MODULES) \
