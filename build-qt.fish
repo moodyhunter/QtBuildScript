@@ -122,7 +122,7 @@ end
 
 if [ "$QT_PLATFORM" != desktop ]
     if not set -q _flag_host_path
-        set -l desktops $BASE_DIR/Current/desktop-*
+        set -l desktops $BASE_DIR/Current/desktop*
         if set -q desktops[1]
             set QT_HOST_PATH (realpath $desktops[1])
             set_color green
