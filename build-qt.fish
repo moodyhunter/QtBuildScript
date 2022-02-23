@@ -161,10 +161,7 @@ end
 
 echo ""
 
-# Remove ccache from display kits.
 set BUILD_KITS_DISPLAY $BUILD_KITS
-set BUILD_KITS_DISPLAY (string match -v ccache $BUILD_KITS_DISPLAY)
-set BUILD_KITS_DISPLAY (string match -v cpp20 $BUILD_KITS_DISPLAY)
 set_color green
 echo "Loading Kits..."
 set_color normal
