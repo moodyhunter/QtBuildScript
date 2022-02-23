@@ -29,7 +29,9 @@ if type -q git
     end >>$INSTALL_DIR/modules.info
 end
 
-if string match -qr ccache $BUILD_KITS
+if string match -qr sccache $BUILD_KITS
+    sccache --show-stats | tee $INSTALL_DIR/cache.info || true
+else if string match -qr ccache $BUILD_KITS
     ccache -sv | tee $INSTALL_DIR/cache.info || true
 end
 
