@@ -14,4 +14,4 @@ git pull --rebase --verbose --autostash
     --module-subset=(string join ',' $QT_MODULES) \
     -f \
     --force-hooks \
-    --branch $argv
+    $argv
