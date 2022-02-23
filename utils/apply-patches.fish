@@ -6,7 +6,7 @@ if not source (dirname (status --current-filename))/common.fish 2>/dev/null
     exit 1
 end
 
-set EXIT_SUCCESS 0
+set EXIT_CODE 0
 
 for f in $BASE_DIR/patches/*
     set PATCH_FILE_NAME (basename $f | cut -d'.' -f-1)
