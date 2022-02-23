@@ -1,0 +1,46 @@
+From 67d90164302b212949651358313fc003dbddb491 Mon Sep 17 00:00:00 2001
+From: Moody Liu <mooodyhunter@outlook.com>
+Date: Tue, 22 Feb 2022 20:30:02 +0000
+Subject: [PATCH] call the QStringDecoder constructor explicitly
+
+Change-Id: I921d42dc72e609c0bdeef3b5c2add8c34741201d
+---
+
+diff --git a/src/linguist/shared/po.cpp b/src/linguist/shared/po.cpp
+index d9aa24b..5348c82 100644
+--- a/src/linguist/shared/po.cpp
++++ b/src/linguist/shared/po.cpp
+@@ -476,7 +476,7 @@
+                                     .arg(QString::fromLatin1(hdrValue)));
+                                 error = true;
+                                 // This will avoid a flood of conversion errors.
+-                                toUnicode = QStringConverter::Latin1;
++                                toUnicode = QStringDecoder{ QStringConverter::Latin1 };
+                             } else {
+                                 QByteArray cod = hdrValue.mid(20);
+                                 auto enc = QStringConverter::encodingForName(cod);
+@@ -485,9 +485,9 @@
+                                             .arg(QString::fromLatin1(cod)));
+                                     error = true;
+                                     // This will avoid a flood of conversion errors.
+-                                    toUnicode = QStringConverter::Latin1;
++                                    toUnicode = QStringDecoder{ QStringConverter::Latin1 };
+                                 } else {
+-                                    toUnicode = *enc;
++                                    toUnicode = QStringDecoder{ *enc };
+                                 }
+                             }
+                     } else if (hdrName == "Content-Transfer-Encoding") {
+diff --git a/src/qdoc/tokenizer.cpp b/src/qdoc/tokenizer.cpp
+index 1f9476d..617a8ba 100644
+--- a/src/qdoc/tokenizer.cpp
++++ b/src/qdoc/tokenizer.cpp
+@@ -515,7 +515,7 @@
+     sourceDecoder = QStringDecoder(sourceEncoding.toUtf8());
+     if (!sourceDecoder.isValid()) {
+         qWarning() << "Source encoding" << sourceEncoding << "is not supported. Using UTF-8.";
+-        sourceDecoder = QStringDecoder::Utf8;
++        sourceDecoder = QStringDecoder{ QStringDecoder::Utf8 };
+     }
+ 
+     comment = new QRegularExpression("/(?:\\*.*\\*/|/.*\n|/[^\n]*$)", QRegularExpression::InvertedGreedinessOption);
