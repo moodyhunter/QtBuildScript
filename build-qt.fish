@@ -94,11 +94,12 @@ if test -e $BASE_DIR/.base-kits
     set_color normal
     echo "$BASE_DIR/.base-kits"
 
+    set_color green
+    echo -n "Base Kits:"
+    set_color normal
+
     for k in (cat $BASE_DIR/.base-kits)
-        set_color green
-        echo -n " Applied: "
-        set_color normal
-        echo "$k"
+        echo -n " $k"
         set -p argv "$k"
     end
 end
@@ -109,15 +110,16 @@ if test -z "$argv"
     echo -n "Applying default kits from: "
     set_color normal
     echo "$BASE_DIR/.default-kits"
+
+    set_color green
+    echo -n "Default Kits:"
+    set_color normal
+
     set argv
     for k in (cat $BASE_DIR/.default-kits)
-        set_color green
-        echo -n " Applied: "
-        set_color normal
-        echo "$k"
+        echo -n " $k"
         set -p argv "$k"
     end
-    set_color normal
 end
 
 if [ "$QT_PLATFORM" != desktop ]
@@ -131,7 +133,7 @@ if [ "$QT_PLATFORM" != desktop ]
             echo $QT_HOST_PATH
         else
             set_color red
-            echo "Cannot automatically detect Qt host path, please specify one using -h option."
+            echo "Cannot automatically detect Qt host path, please specify one using the -h option."
             exit 1
         end
     else
@@ -142,15 +144,14 @@ end
 echo ""
 
 set -g BUILD_KITS $argv
-lastdedup BUILD_KITS
-set_color green && echo -n "Kits: " && set_color normal
-echo $BUILD_KITS
-
 echo ""
+lastdedup BUILD_KITS
+set_color green && echo -n "Build Kits: " && set_color normal
+echo $BUILD_KITS
 
 if source "$BASE_DIR/utils/platforms/$QT_PLATFORM.fish" 2>/dev/null
     set_color green
-    echo -n "Platform initialised: "
+    echo -n "Build Platform: "
     set_color normal
     echo "$QT_PLATFORM"
 else
@@ -173,13 +174,13 @@ for kit in $BUILD_KITS
         exit 1
     end
 
+    set_color green
+    echo -n " Loading Kit: "
+    set_color normal
+    echo "$kit"
+
     set_color blue
-    if source "$BASE_DIR/utils/kits/$kit.fish" 2>/dev/null
-        set_color green
-        echo -n " Loaded: "
-        set_color normal
-        echo "$kit"
-    else
+    if not source "$BASE_DIR/utils/kits/$kit.fish" 2>/dev/null
         set_color red
         echo "Failed to load '$kit'."
         exit 1

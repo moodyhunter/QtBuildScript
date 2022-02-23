@@ -31,6 +31,7 @@ end
 
 if string match -qr sccache $BUILD_KITS
     sccache --show-stats | tee $INSTALL_DIR/cache.info || true
+    sccache --stop-server 2>/dev/null || true
 else if string match -qr ccache $BUILD_KITS
     ccache -sv | tee $INSTALL_DIR/cache.info || true
 end

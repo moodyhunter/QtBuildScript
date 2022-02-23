@@ -1,4 +1,6 @@
 .build/
+
+.sccache/
 .build-cache/
 
 .base-kits
