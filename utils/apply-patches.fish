@@ -8,7 +8,7 @@ end
 
 set EXIT_CODE 0
 
-for f in $BASE_DIR/patches/*
+for f in $BASE_DIR/patches/*.patch
     set PATCH_FILE_NAME (basename $f | cut -d'.' -f-1)
     set PATCH_NUMBER (echo $PATCH_FILE_NAME | cut -d'-' -f1)
     set PATCH_MODULE (echo $PATCH_FILE_NAME | cut -d'-' -f2)

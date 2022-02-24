@@ -29,6 +29,6 @@ set -g QT_MODULES qtbase qtsvg qtshadertools qtimageformats \
     qtquicktimeline qtremoteobjects qttools qtactiveqt \
     qttranslations qtwayland qtwebsockets qtquick3d qtpositioning \
     qtcharts qtlottie qtnetworkauth qtvirtualkeyboard qtscxml \
-    qtserialbus qtserialport qtconnectivity qtrepotools
+    qtserialbus qtserialport qtconnectivity qtrepotools qtspeech
 
 cd $BASE_DIR
