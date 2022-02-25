@@ -287,6 +287,7 @@ else
 
     set QT_BUILDSCRIPT_EXPORTED 1
     exportenv QT_BUILDSCRIPT_EXPORTED "Mark the environment as exported"
+    exportenv SKIP_CLEANUP "Skip cleaning up build directories"
     exportenv PATH "Executable search paths"
     exportenv BUILD_DIR "Build output directory"
     exportenv BUILD_TYPE "Build type"

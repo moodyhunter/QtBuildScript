@@ -8,7 +8,6 @@ end
 
 cd $BASE_DIR
 
-echo ""
 echo "Current Build Dir: $BUILD_DIR"
 
 set CLEANUP_DIR $BUILD_DIR
@@ -23,6 +22,12 @@ if not string match -q "$BASE_DIR/.build/*" "$CLEANUP_DIR"
         case '' N n
             exit 0
     end
+else if [ "$SKIP_CLEANUP" = 1 ]
+    set_color yellow
+    echo "SKIP_CLEANUP was set, skipping cleaning up."
+    set_color normal
+    mkdir -p $CLEANUP_DIR
+    exit 0
 end
 
 set_color yellow
