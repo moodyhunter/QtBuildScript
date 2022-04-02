@@ -1,0 +1,15 @@
+ src/plugins/platforms/wasm/qwasmcompositor.h | 1 [32m+[m
+ 1 file changed, 1 insertion(+)
+
+[1mdiff --git a/src/plugins/platforms/wasm/qwasmcompositor.h b/src/plugins/platforms/wasm/qwasmcompositor.h[m
+[1mindex 27f518635d..b4a9360996 100644[m
+[1m--- a/src/plugins/platforms/wasm/qwasmcompositor.h[m
+[1m+++ b/src/plugins/platforms/wasm/qwasmcompositor.h[m
+[36m@@ -40,6 +40,7 @@[m
+ [m
+ #include <QPointer>[m
+ #include <QPointingDevice>[m
+[32m+[m[32m#include <QMap>[m
+ [m
+ #include <emscripten/html5.h>[m
+ #include <emscripten/emscripten.h>[m

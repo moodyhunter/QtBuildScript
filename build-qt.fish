@@ -123,6 +123,7 @@ if test -z "$argv"
 end
 
 if [ "$QT_PLATFORM" != desktop ]
+    echo ""
     if not set -q _flag_host_path
         set -l desktops $BASE_DIR/Current/desktop*
         if set -q desktops[1]
