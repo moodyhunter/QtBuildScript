@@ -1,15 +1,38 @@
- src/plugins/platforms/wasm/qwasmcompositor.h | 1 [32m+[m
- 1 file changed, 1 insertion(+)
+From 4518466d6d4c2eba80c69bf79ef3d1eadffb96aa Mon Sep 17 00:00:00 2001
+From: Moody <mooodyhunter@outlook.com>
+Date: Sat, 2 Apr 2022 23:39:49 +0100
+Subject: [PATCH] proper patch
 
-[1mdiff --git a/src/plugins/platforms/wasm/qwasmcompositor.h b/src/plugins/platforms/wasm/qwasmcompositor.h[m
-[1mindex 27f518635d..b4a9360996 100644[m
-[1m--- a/src/plugins/platforms/wasm/qwasmcompositor.h[m
-[1m+++ b/src/plugins/platforms/wasm/qwasmcompositor.h[m
-[36m@@ -40,6 +40,7 @@[m
- [m
- #include <QPointer>[m
- #include <QPointingDevice>[m
-[32m+[m[32m#include <QMap>[m
- [m
- #include <emscripten/html5.h>[m
- #include <emscripten/emscripten.h>[m
+Change-Id: I334a07856be17cd92b553ef7297381df1c4fe4a3
+---
+ src/plugins/platforms/wasm/qwasmcompositor.h | 1 +
+ src/plugins/platforms/wasm/qwasmtheme.cpp    | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/src/plugins/platforms/wasm/qwasmcompositor.h b/src/plugins/platforms/wasm/qwasmcompositor.h
+index 27f518635d..b4a9360996 100644
+--- a/src/plugins/platforms/wasm/qwasmcompositor.h
++++ b/src/plugins/platforms/wasm/qwasmcompositor.h
+@@ -40,6 +40,7 @@
+ 
+ #include <QPointer>
+ #include <QPointingDevice>
++#include <QMap>
+ 
+ #include <emscripten/html5.h>
+ #include <emscripten/emscripten.h>
+diff --git a/src/plugins/platforms/wasm/qwasmtheme.cpp b/src/plugins/platforms/wasm/qwasmtheme.cpp
+index 438e3e1119..6ec9854305 100644
+--- a/src/plugins/platforms/wasm/qwasmtheme.cpp
++++ b/src/plugins/platforms/wasm/qwasmtheme.cpp
+@@ -30,6 +30,7 @@
+ #include "qwasmtheme.h"
+ #include <QtCore/qvariant.h>
+ #include <QFontDatabase>
++#include <QList>
+ 
+ QT_BEGIN_NAMESPACE
+ 
+-- 
+2.35.1
+
