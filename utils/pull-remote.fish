@@ -12,6 +12,10 @@ cd $NIGHTLY_DIR/.pulled
 rsync --remove-source-files -rP "$QT_BUILDER_REMOTE" . || exit 1
 
 cd $NIGHTLY_DIR
-tar xvf $NIGHTLY_DIR/.pulled/*
+
+for file in $NIGHTLY_DIR/.pulled/*
+    tar xvf $file
+end
+
 rm -v $NIGHTLY_DIR/.pulled/*
 
