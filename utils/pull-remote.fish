@@ -8,14 +8,23 @@ end
 
 set NIGHTLY_DIR "$BASE_DIR/nightly"
 
+set_color green && echo -n "=> " && set_color reset && echo "Pulling remote files..."
 cd $NIGHTLY_DIR/.pulled
 rsync --remove-source-files -rP "$QT_BUILDER_REMOTE" . || exit 1
 
 cd $NIGHTLY_DIR
 
+set_color green && echo -n "=> " && set_color reset && echo "Extracting files..."
 for file in $NIGHTLY_DIR/.pulled/*
-    tar xvf $file
+    set_color blue && echo -n "  -> " && set_color reset && echo "Extracting '$file'..."
+    tar xf $file || exit 1
+    rm $file
 end
 
-rm -v $NIGHTLY_DIR/.pulled/*
+echo ""
+set_color green && echo -n "=> " && set_color reset && echo "Patching binary paths..."
+"$BASE_DIR"/utils/patch-bindir.fish
 
+echo ""
+set_color green && echo -n "=> " && set_color reset && echo "Setting up 'Current' directory..."
+"$BASE_DIR"/utils/fix-current-link.fish
