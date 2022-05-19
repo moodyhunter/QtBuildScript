@@ -37,6 +37,7 @@ set -lp arg_flag (fish_opt --short=j --long=parallel --optional-val)
 set -lp arg_flag (fish_opt --short=1 --long=help --long-only)
 set -lp arg_flag (fish_opt --short=k --long=skip-cleanup)
 set -lp arg_flag (fish_opt --short=E --long=export --required-val)
+set -lp arg_flag (fish_opt --short=A --long=extra-args --required-val)
 
 set_color red
 argparse $arg_flag -- $argv || exit 1
@@ -57,6 +58,7 @@ if set -q _flag_help
     echo "  -j, --parallel=<N>          Run N jobs at once, can be automatically detected from nproc if unspecified."
     echo "  -k, --skip-cleanup          Skip cleanup the build directory."
     echo "  -E, --export=<file>         Export prepared environment variables to a custom file only, do not perform build."
+    echo "  -A, --extra-args            Append extra arguments to CMake."
     echo ""
     echo "available kits:"
     echo "  combination of:"
@@ -207,6 +209,8 @@ end
 for x in (echo -n $CMAKE_ARGUMENTS_APPEND | sed 's/ /\n/g')
     set -a EXTRA_CMAKE_ARGUMENTS $x
 end
+
+set -p EXTRA_CMAKE_ARGUMENTS $_flag_extra_args
 
 echo ""
 echo "CMake arguments:"
