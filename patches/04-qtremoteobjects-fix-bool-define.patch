@@ -1,0 +1,85 @@
+From 37e9ed4f8786656e7055a0ca427e4509c36f5c74 Mon Sep 17 00:00:00 2001
+From: Moody Liu <mooodyhunter@outlook.com>
+Date: Thu, 19 May 2022 19:26:34 +0100
+Subject: [PATCH] prevent name clash with _Bool from stdbool.h
+
+the macro _Bool from stdbool.h was included by the commit
+56dcb3b49643216e25863af5d18883396654f840 in qtbase, so rename the
+function here to prevent name clashes
+
+Change-Id: I74645678f2261ca263efc914212b842973db2f47
+---
+
+diff --git a/tools/repc/utils.cpp b/tools/repc/utils.cpp
+index 1fbad74..925aa91 100644
+--- a/tools/repc/utils.cpp
++++ b/tools/repc/utils.cpp
+@@ -96,11 +96,15 @@
+     static QJsonArray _Array(const QJsonValue &json, const char *key) { return _Sub(json, key, JSON::Array).toArray(); }
+     static QString _String(const QJsonValue &json, const char *key) { return _Sub(json, key, JSON::String).toString(); }
+     static QByteArray _Bytes(const QJsonValue &json, const char *key) { return _Sub(json, key, JSON::String).toString().toLatin1(); }
+-    static bool _Bool(const QJsonValue &json, const char *key) { return _Sub(json, key, JSON::Bool).toBool(); }
+-    static bool _Bool(const QJsonValue &json, const char *key, bool missingValue) {
++    static bool _Boolean(const QJsonValue &json, const char *key)
++    {
++        return _Sub(json, key, JSON::Bool).toBool();
++    }
++    static bool _Boolean(const QJsonValue &json, const char *key, bool missingValue)
++    {
+         if (!_Contains(json, key))
+             return missingValue;
+-        bool res = _Bool(json, key);
++        bool res = _Boolean(json, key);
+         return res;
+     }
+ }
+@@ -123,12 +127,12 @@
+ {
+     QByteArrayList ret;
+     for (const QJsonValue prop : properties) {
+-        if (!isPod && !_Contains(prop, "notify") && !_Bool(prop, "constant")) {
++        if (!isPod && !_Contains(prop, "notify") && !_Boolean(prop, "constant")) {
+             qWarning() << "Skipping property" << _String(prop, "name") << "because it is non-notifiable & non-constant";
+             continue; // skip non-notifiable properties
+         }
+         QByteArray output = _Bytes(prop, "type") + " " + _Bytes(prop, "name");
+-        if (_Bool(prop, "constant"))
++        if (_Boolean(prop, "constant"))
+             output += " CONSTANT";
+         if (!_Contains(prop, "write") && _Contains(prop, "read."))
+             output += " READONLY";
+@@ -209,8 +213,8 @@
+ 
+ QByteArray generateClass(const QJsonValue &cls, bool alwaysGenerateClass)
+ {
+-    if (_Bool(cls, "gadget", false) || alwaysGenerateClass ||
+-            (_Empty(cls, "signals") && _Empty(cls, "slots")))
++    if (_Boolean(cls, "gadget", false) || alwaysGenerateClass
++        || (_Empty(cls, "signals") && _Empty(cls, "slots")))
+         return "POD " + _Bytes(cls, "className") + "(" + join(generateProperties(_Array(cls, "properties"), true), ", ") + ")\n";
+ 
+     QByteArray ret("class " + _Bytes(cls, "className") + "\n{\n");
+@@ -234,18 +238,17 @@
+ {
+     QList<ASTProperty> ret;
+     for (const QJsonValue property : list) {
+-        if (!_Contains(property, "notify") && !_Bool(property, "constant")) {
++        if (!_Contains(property, "notify") && !_Boolean(property, "constant")) {
+             qWarning() << "Skipping property" << _String(property, "name") << "because it is non-notifiable & non-constant";
+             continue; // skip non-notifiable properties
+         }
+         ASTProperty prop;
+         prop.name = _String(property, "name");
+         prop.type = _String(property, "type");
+-        prop.modifier = _Bool(property, "constant")
+-                        ? ASTProperty::Constant
+-                        : !_Contains(property, "write") && _Contains(property, "read")
+-                          ? ASTProperty::ReadOnly
+-                          : ASTProperty::ReadWrite;
++        prop.modifier = _Boolean(property, "constant") ? ASTProperty::Constant
++                : !_Contains(property, "write") && _Contains(property, "read")
++                ? ASTProperty::ReadOnly
++                : ASTProperty::ReadWrite;
+         ret.push_back(prop);
+     }
+     return ret;
