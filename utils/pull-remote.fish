@@ -22,9 +22,7 @@ for file in $NIGHTLY_DIR/.pulled/*
 end
 
 echo ""
-set_color green && echo -n "=> " && set_color reset && echo "Patching binary paths..."
 "$BASE_DIR"/utils/patch-bindir.fish
 
 echo ""
-set_color green && echo -n "=> " && set_color reset && echo "Setting up 'Current' directory..."
 "$BASE_DIR"/utils/fix-current-link.fish
