@@ -3,12 +3,19 @@
 if test -z "$QT_BUILDSCRIPT_EXPORTED"
     set_color red
     echo "ERROR:"
-    echo "  By invoking finalise.fish, you should be expecting this to perform finalisation for your Qt build."
+    echo "  By calling finalise.fish, you should be expecting this to perform finalisation for your Qt build."
     echo "  However it seems that you are not in a valid build environment"
     echo ""
     echo "See `./build-qt.fish --help`, option `-E` for more information."
     set_color normal
     exit 1
+end
+
+if [ "$NO_INSTALL" = 1 ]
+    set_color yellow
+    echo "Installation has been skipped."
+    set_color reset
+    exit 0
 end
 
 cd $BUILD_DIR

@@ -38,6 +38,7 @@ set -lp arg_flag (fish_opt --short=1 --long=help --long-only)
 set -lp arg_flag (fish_opt --short=k --long=skip-cleanup)
 set -lp arg_flag (fish_opt --short=E --long=export --required-val)
 set -lp arg_flag (fish_opt --short=A --long=extra-args --required-val)
+set -lp arg_flag (fish_opt --short=N --long=no-install)
 
 set_color red
 argparse $arg_flag -- $argv || exit 1
@@ -59,6 +60,7 @@ if set -q _flag_help
     echo "  -k, --skip-cleanup          Skip cleanup the build directory."
     echo "  -E, --export=<file>         Export prepared environment variables to a custom file only, do not perform build."
     echo "  -A, --extra-args            Append extra arguments to CMake."
+    echo "  -N, --no-install            Do not perform installation after build."
     echo ""
     echo "available kits:"
     echo "  combination of:"
@@ -69,8 +71,12 @@ if set -q _flag_help
     exit 0
 end
 
-set PARALLEL_LEVEL (if test -z "$_flag_parallel"; nproc; else; echo "$_flag_parallel"; end)
+# Boolean args
 set SKIP_CLEANUP (if set -q _flag_skip_cleanup; echo "1"; else; echo "0"; end)
+set NO_INSTALL (if set -q _flag_no_install; echo "1"; else; echo "0"; end)
+
+# Args
+set PARALLEL_LEVEL (if test -z "$_flag_parallel"; nproc; else; echo "$_flag_parallel"; end)
 set QT_PLATFORM (if test -z "$_flag_platform"; echo "desktop"; else; echo "$_flag_platform"; end)
 set QT_ARCH (if test -z "$_flag_arch"; echo "x86_64"; else; echo "$_flag_arch"; end)
 set EXPORT_PATH "$_flag_export"
@@ -229,6 +235,12 @@ if [ "$SKIP_CLEANUP" = 1 ]
     set_color normal
     echo "$BUILD_DIR"
 end
+if [ "$NO_INSTALL" = 1 ]
+    set_color yellow
+    echo -n "Will not perform installation to target directory: "
+    set_color normal
+    echo "$INSTALL_DIR"
+end
 
 mkdir -p "$BASE_DIR/Current/"
 mkdir -p "$BASE_DIR/nightly/"
@@ -306,6 +318,7 @@ else
     exportenv QT_ARCH "Qt target architecture"
     exportenv QT_HOST_PATH "Qt host build path"
     exportenv QT_MODULES "Qt submodules to build"
+    exportenv NO_INSTALL "Skip installation"
 
     for v in $EXTRA_EXPORT_VARIABLES
         exportenv $v "$v"
