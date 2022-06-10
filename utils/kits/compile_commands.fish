@@ -1,0 +1,4 @@
+set -p EXTRA_CMAKE_ARGUMENTS "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+
+set -g BUILD_KITS_DISPLAY (string match -v compile_commands $BUILD_KITS_DISPLAY)
+exit 0
