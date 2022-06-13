@@ -1,0 +1,452 @@
+diff --git a/doc/config/qthttpserver.qdocconf b/doc/config/qthttpserver.qdocconf
+index ab8fcd3..f0e8e96 100644
+--- a/doc/config/qthttpserver.qdocconf
++++ b/doc/config/qthttpserver.qdocconf
+@@ -8,13 +8,10 @@ version                 = $QT_VERSION
+ 
+ depends += qtcore qtnetwork qtdoc qmake qtwebsockets
+ 
+-headerdirs  += \
+-    ../../src/httpserver \
+-    ../../src/sslserver
++headerdirs  += ../../src/httpserver
+ 
+ sourcedirs  += .. \
+-    ../../src/httpserver \
+-    ../../src/sslserver
++    ../../src/httpserver
+ 
+ exampledirs += \
+     ../../examples/httpserver/
+diff --git a/doc/overview.qdoc b/doc/overview.qdoc
+index f70044b..a8ae6b7 100644
+--- a/doc/overview.qdoc
++++ b/doc/overview.qdoc
+@@ -59,6 +59,8 @@ and an afterRequest function to process the response further.
+ When security is needed and you have Qt compiled with support for TLS,
+ you can bind QAbstractHttpServer and its subclasses to a QSslServer object,
+ providing Transport Layer Security handling, turning it into an HTTPS server.
++This can also be achieved by calling the QAbstractHttpServer::sslSetup()
++function before calling listen().
+ 
+ \section2 Related Information
+ \list
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 588815f..4e06538 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -1,6 +1,3 @@
+ # Generated from src.pro.
+ 
+-if(QT_FEATURE_ssl)
+-    add_subdirectory(sslserver)
+-endif()
+ add_subdirectory(httpserver)
+diff --git a/src/httpserver/CMakeLists.txt b/src/httpserver/CMakeLists.txt
+index 90a8719..0172ccd 100644
+--- a/src/httpserver/CMakeLists.txt
++++ b/src/httpserver/CMakeLists.txt
+@@ -42,11 +42,6 @@ qt_internal_extend_target(HttpServer CONDITION TARGET Qt::WebSockets
+         Qt::WebSocketsPrivate
+ )
+ 
+-qt_internal_extend_target(HttpServer CONDITION QT_FEATURE_ssl
+-    PUBLIC_LIBRARIES
+-        Qt::SslServer
+-)
+-
+ qt_internal_extend_target(HttpServer CONDITION TARGET Qt::Concurrent
+     SOURCES
+         qhttpserverfutureresponse.cpp qhttpserverfutureresponse.h
+diff --git a/src/httpserver/qabstracthttpserver.cpp b/src/httpserver/qabstracthttpserver.cpp
+index dbf1dee..293af72 100644
+--- a/src/httpserver/qabstracthttpserver.cpp
++++ b/src/httpserver/qabstracthttpserver.cpp
+@@ -169,8 +169,14 @@ quint16 QAbstractHttpServer::listen(const QHostAddress &address, quint16 port)
+ {
+ #if QT_CONFIG(ssl)
+     Q_D(QAbstractHttpServer);
+-    QTcpServer *tcpServer = d->sslEnabled ? new QSslServer(d->sslConfiguration, this)
+-                                          : new QTcpServer(this);
++    QTcpServer *tcpServer;
++    if (d->sslEnabled) {
++        auto sslServer = new QSslServer(this);
++        sslServer->setSslConfiguration(d->sslConfiguration);
++        tcpServer = sslServer;
++    } else {
++        tcpServer = new QTcpServer(this);
++    }
+ #else
+     auto tcpServer = new QTcpServer(this);
+ #endif
+@@ -241,8 +247,8 @@ void QAbstractHttpServer::bind(QTcpServer *server)
+             qCWarning(lcHttpServer) << "The TCP server" << server << "is not listening.";
+         server->setParent(this);
+     }
+-    QObjectPrivate::connect(server, &QTcpServer::newConnection,
+-                            d, &QAbstractHttpServerPrivate::handleNewConnections,
++    QObjectPrivate::connect(server, &QTcpServer::pendingConnectionAvailable, d,
++                            &QAbstractHttpServerPrivate::handleNewConnections,
+                             Qt::UniqueConnection);
+ }
+ 
+@@ -325,6 +331,12 @@ QHttpServerResponder QAbstractHttpServer::makeResponder(const QHttpServerRequest
+ */
+ 
+ #if QT_CONFIG(ssl)
++/*!
++    Turns the server into an HTTPS server.
++
++    The next listen() call will use the given \a certificate, \a privateKey,
++    and \a protocol.
++*/
+ void QAbstractHttpServer::sslSetup(const QSslCertificate &certificate,
+                                    const QSslKey &privateKey,
+                                    QSsl::SslProtocol protocol)
+@@ -336,6 +348,11 @@ void QAbstractHttpServer::sslSetup(const QSslCertificate &certificate,
+     sslSetup(conf);
+ }
+ 
++/*!
++    Turns the server into an HTTPS server.
++
++    The next listen() call will use the given \a sslConfiguration.
++*/
+ void QAbstractHttpServer::sslSetup(const QSslConfiguration &sslConfiguration)
+ {
+     Q_D(QAbstractHttpServer);
+diff --git a/src/httpserver/qabstracthttpserver.h b/src/httpserver/qabstracthttpserver.h
+index df0af73..bd59f55 100644
+--- a/src/httpserver/qabstracthttpserver.h
++++ b/src/httpserver/qabstracthttpserver.h
+@@ -37,7 +37,7 @@
+ #include <QtNetwork/qhostaddress.h>
+ 
+ #if QT_CONFIG(ssl)
+-#include <QtSslServer/qsslserver.h>
++#include <QtNetwork/QSslServer>
+ #include <QSslCertificate>
+ #include <QSslKey>
+ #endif
+diff --git a/src/sslserver/CMakeLists.txt b/src/sslserver/CMakeLists.txt
+deleted file mode 100644
+index 5f67644..0000000
+--- a/src/sslserver/CMakeLists.txt
++++ /dev/null
+@@ -1,16 +0,0 @@
+-# Generated from sslserver.pro.
+-
+-#####################################################################
+-## SslServer Module:
+-#####################################################################
+-
+-qt_internal_add_module(SslServer
+-    SOURCES
+-        qsslserver.cpp qsslserver.h qsslserver_p.h
+-        qtsslserverglobal.h
+-    INCLUDE_DIRECTORIES
+-        .
+-    PUBLIC_LIBRARIES
+-        Qt::Core
+-        Qt::Network
+-)
+diff --git a/src/sslserver/qsslserver.cpp b/src/sslserver/qsslserver.cpp
+deleted file mode 100644
+index 108fca1..0000000
+--- a/src/sslserver/qsslserver.cpp
++++ /dev/null
+@@ -1,107 +0,0 @@
+-/****************************************************************************
+-**
+-** Copyright (C) 2019 Sylvain Garcia <garcia.6l20@gmail.com>.
+-** Contact: https://www.qt.io/licensing/
+-**
+-** This file is part of the QtHttpServer module of the Qt Toolkit.
+-**
+-** $QT_BEGIN_LICENSE:GPL$
+-** Commercial License Usage
+-** Licensees holding valid commercial Qt licenses may use this file in
+-** accordance with the commercial license agreement provided with the
+-** Software or, alternatively, in accordance with the terms contained in
+-** a written agreement between you and The Qt Company. For licensing terms
+-** and conditions see https://www.qt.io/terms-conditions. For further
+-** information use the contact form at https://www.qt.io/contact-us.
+-**
+-** GNU General Public License Usage
+-** Alternatively, this file may be used under the terms of the GNU
+-** General Public License version 3 or (at your option) any later version
+-** approved by the KDE Free Qt Foundation. The licenses are as published by
+-** the Free Software Foundation and appearing in the file LICENSE.GPL3
+-** included in the packaging of this file. Please review the following
+-** information to ensure the GNU General Public License requirements will
+-** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+-**
+-** $QT_END_LICENSE$
+-**
+-****************************************************************************/
+-
+-#include <private/qsslserver_p.h>
+-
+-#include <QtCore/qloggingcategory.h>
+-
+-QT_BEGIN_NAMESPACE
+-
+-Q_LOGGING_CATEGORY(lcSS, "qt.sslserver");
+-
+-/*!
+-    \class QSslServer
+-    \inmodule QtHttpServer
+-    \brief Subclass of QTcpServer to accept secure connections.
+-
+-    API for running a server with Transport Layer Security. Calling \c bind
+-    on a QAbstractHttpServer with an instance of QSslServer turns it into an
+-    HTTPS server.
+-*/
+-
+-/*!
+-    Creates a QSslServer object with \a parent as the parent object.
+-*/
+-QSslServer::QSslServer(QObject *parent):
+-    QTcpServer (parent), d(new QSslServerPrivate)
+-{
+-}
+-
+-/*!
+-    Creates a QSslServer object.
+-
+-    Its parent object shall be \a parent and it shall use \a sslConfiguration as its
+-    TLS configuration.
+-*/
+-QSslServer::QSslServer(const QSslConfiguration &sslConfiguration,
+-                       QObject *parent):
+-    QTcpServer (parent), d(new QSslServerPrivate)
+-{
+-    d->sslConfiguration = sslConfiguration;
+-}
+-
+-/*!
+-    Destroys a QsslServer object.
+-*/
+-QSslServer::~QSslServer() = default;
+-
+-/*!
+-    Handle incoming connection with socket handle \a handle.
+-*/
+-void QSslServer::incomingConnection(qintptr handle)
+-{
+-    QSslSocket *socket = new QSslSocket(this);
+-    connect(socket, &QAbstractSocket::errorOccurred, socket, [socket]() {
+-        qCWarning(lcSS, "Socket error: %s", qPrintable(socket->errorString()));
+-        socket->close();
+-    });
+-
+-    connect(socket, QOverload<const QList<QSslError>&>::of(&QSslSocket::sslErrors),
+-            [this, socket](const QList<QSslError> &errors) {
+-        for (auto &err: errors)
+-            qCCritical(lcSS) << err;
+-        Q_EMIT sslErrors(socket, errors);
+-    });
+-    socket->setSocketDescriptor(handle);
+-    socket->setSslConfiguration(d->sslConfiguration);
+-    socket->startServerEncryption();
+-
+-    addPendingConnection(socket);
+-}
+-
+-/*!
+-    Sets the SSL configuration to \a sslConfiguration.
+-*/
+-void QSslServer::setSslConfiguration(const QSslConfiguration &sslConfiguration)
+-{
+-    d->sslConfiguration = sslConfiguration;
+-}
+-QT_END_NAMESPACE
+-
+-#include "moc_qsslserver.cpp"
+diff --git a/src/sslserver/qsslserver.h b/src/sslserver/qsslserver.h
+deleted file mode 100644
+index 841fc4f..0000000
+--- a/src/sslserver/qsslserver.h
++++ /dev/null
+@@ -1,65 +0,0 @@
+-/****************************************************************************
+-**
+-** Copyright (C) 2019 Sylvain Garcia <garcia.6l20@gmail.com>.
+-** Contact: https://www.qt.io/licensing/
+-**
+-** This file is part of the QtHttpServer module of the Qt Toolkit.
+-**
+-** $QT_BEGIN_LICENSE:GPL$
+-** Commercial License Usage
+-** Licensees holding valid commercial Qt licenses may use this file in
+-** accordance with the commercial license agreement provided with the
+-** Software or, alternatively, in accordance with the terms contained in
+-** a written agreement between you and The Qt Company. For licensing terms
+-** and conditions see https://www.qt.io/terms-conditions. For further
+-** information use the contact form at https://www.qt.io/contact-us.
+-**
+-** GNU General Public License Usage
+-** Alternatively, this file may be used under the terms of the GNU
+-** General Public License version 3 or (at your option) any later version
+-** approved by the KDE Free Qt Foundation. The licenses are as published by
+-** the Free Software Foundation and appearing in the file LICENSE.GPL3
+-** included in the packaging of this file. Please review the following
+-** information to ensure the GNU General Public License requirements will
+-** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+-**
+-** $QT_END_LICENSE$
+-**
+-****************************************************************************/
+-
+-#ifndef QSSLSERVER_H
+-#define QSSLSERVER_H
+-
+-#include <QtSslServer/qtsslserverglobal.h>
+-
+-#include <QtNetwork/qtcpserver.h>
+-#include <QtNetwork/qsslconfiguration.h>
+-
+-#include <QtCore/qscopedpointer.h>
+-
+-QT_BEGIN_NAMESPACE
+-
+-class QSslServerPrivate;
+-class Q_SSLSERVER_EXPORT QSslServer : public QTcpServer
+-{
+-    Q_OBJECT
+-public:
+-    QSslServer(QObject *parent = nullptr);
+-    QSslServer(const QSslConfiguration &sslConfiguration, QObject *parent = nullptr);
+-    ~QSslServer();
+-
+-    void setSslConfiguration(const QSslConfiguration &sslConfiguration);
+-
+-Q_SIGNALS:
+-    void sslErrors(QSslSocket *socket, const QList<QSslError> &errors);
+-
+-protected:
+-    void incomingConnection(qintptr handle) override final;
+-
+-private:
+-    QScopedPointer<QSslServerPrivate> d;
+-};
+-
+-QT_END_NAMESPACE
+-
+-#endif // QSSLSERVER_HPP
+diff --git a/src/sslserver/qsslserver_p.h b/src/sslserver/qsslserver_p.h
+deleted file mode 100644
+index d6656c1..0000000
+--- a/src/sslserver/qsslserver_p.h
++++ /dev/null
+@@ -1,55 +0,0 @@
+-/****************************************************************************
+-**
+-** Copyright (C) 2019 Sylvain Garcia <garcia.6l20@gmail.com>.
+-** Contact: https://www.qt.io/licensing/
+-**
+-** This file is part of the QtHttpServer module of the Qt Toolkit.
+-**
+-** $QT_BEGIN_LICENSE:GPL$
+-** Commercial License Usage
+-** Licensees holding valid commercial Qt licenses may use this file in
+-** accordance with the commercial license agreement provided with the
+-** Software or, alternatively, in accordance with the terms contained in
+-** a written agreement between you and The Qt Company. For licensing terms
+-** and conditions see https://www.qt.io/terms-conditions. For further
+-** information use the contact form at https://www.qt.io/contact-us.
+-**
+-** GNU General Public License Usage
+-** Alternatively, this file may be used under the terms of the GNU
+-** General Public License version 3 or (at your option) any later version
+-** approved by the KDE Free Qt Foundation. The licenses are as published by
+-** the Free Software Foundation and appearing in the file LICENSE.GPL3
+-** included in the packaging of this file. Please review the following
+-** information to ensure the GNU General Public License requirements will
+-** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+-**
+-** $QT_END_LICENSE$
+-**
+-****************************************************************************/
+-
+-#ifndef QSSLSERVER_P_H
+-#define QSSLSERVER_P_H
+-
+-//
+-//  W A R N I N G
+-//  -------------
+-//
+-// This file is not part of the Qt API.  It exists for the convenience
+-// of QHttpServer. This header file may change from version to
+-// version without notice, or even be removed.
+-//
+-// We mean it.
+-
+-#include <QtSslServer/qsslserver.h>
+-
+-QT_BEGIN_NAMESPACE
+-
+-class QSslServerPrivate
+-{
+-public:
+-    QSslConfiguration sslConfiguration;
+-};
+-
+-QT_END_NAMESPACE
+-
+-#endif // QSSLSERVER_P_H
+diff --git a/src/sslserver/qtsslserverglobal.h b/src/sslserver/qtsslserverglobal.h
+deleted file mode 100644
+index 8f9b55d..0000000
+--- a/src/sslserver/qtsslserverglobal.h
++++ /dev/null
+@@ -1,49 +0,0 @@
+-/****************************************************************************
+-**
+-** Copyright (C) 2019 Sylvain Garcia <garcia.6l20@gmail.com>.
+-** Contact: https://www.qt.io/licensing/
+-**
+-** This file is part of the QtHttpServer module of the Qt Toolkit.
+-**
+-** $QT_BEGIN_LICENSE:GPL$
+-** Commercial License Usage
+-** Licensees holding valid commercial Qt licenses may use this file in
+-** accordance with the commercial license agreement provided with the
+-** Software or, alternatively, in accordance with the terms contained in
+-** a written agreement between you and The Qt Company. For licensing terms
+-** and conditions see https://www.qt.io/terms-conditions. For further
+-** information use the contact form at https://www.qt.io/contact-us.
+-**
+-** GNU General Public License Usage
+-** Alternatively, this file may be used under the terms of the GNU
+-** General Public License version 3 or (at your option) any later version
+-** approved by the KDE Free Qt Foundation. The licenses are as published by
+-** the Free Software Foundation and appearing in the file LICENSE.GPL3
+-** included in the packaging of this file. Please review the following
+-** information to ensure the GNU General Public License requirements will
+-** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+-**
+-** $QT_END_LICENSE$
+-**
+-****************************************************************************/
+-
+-#ifndef QTSSLSERVERGLOBAL_H
+-#define QTSSLSERVERGLOBAL_H
+-
+-#include <QtCore/qglobal.h>
+-
+-QT_BEGIN_NAMESPACE
+-
+-#ifndef QT_STATIC
+-#  if defined(QT_BUILD_SSLSERVER_LIB)
+-#    define Q_SSLSERVER_EXPORT Q_DECL_EXPORT
+-#  else
+-#    define Q_SSLSERVER_EXPORT Q_DECL_IMPORT
+-#  endif
+-#else
+-#  define Q_SSLSERVER_EXPORT
+-#endif
+-
+-QT_END_NAMESPACE
+-
+-#endif // QTSSLSERVERGLOBAL_H
