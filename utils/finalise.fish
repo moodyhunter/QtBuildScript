@@ -20,6 +20,8 @@ end
 
 cd $BUILD_DIR
 
+cp -v $BUILD_DIR/config.summary $INSTALL_DIR/config.summary
+
 if test -d "$INSTALL_DIR"
     mv "$INSTALL_DIR" "$INSTALL_DIR-"(random)
 end

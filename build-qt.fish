@@ -203,7 +203,7 @@ set_color green && echo -n "Build Identifier: " && set_color normal
 echo $BUILD_TYPE
 
 set -g BUILD_DIR "$BASE_DIR/.build/$BUILD_TYPE"
-set -g INSTALL_DIR "$BASE_DIR/nightly/$BUILD_TYPE/"(date -I)
+set -g INSTALL_DIR "$BASE_DIR/nightly/$BUILD_TYPE/"(date "+%Y-%m-%d")
 
 set -p EXTRA_CMAKE_ARGUMENTS -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/
 set -p EXTRA_CMAKE_ARGUMENTS -GNinja

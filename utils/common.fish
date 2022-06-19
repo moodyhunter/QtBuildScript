@@ -21,7 +21,9 @@ function lastdedup --description 'Remove duplicates from variable'
     set $argv (reverse $newvar)
 end
 
-set -g BASE_DIR (/usr/bin/realpath (cd (dirname (status -f))/../; pwd))
+set REALPATH_BIN (which realpath)
+
+set -g BASE_DIR ($REALPATH_BIN (cd (dirname (status -f))/../; pwd))
 set -g SRC_DIR "$BASE_DIR/qt"
 
 set -g QT_MODULES qtbase qtsvg qtshadertools qtimageformats \

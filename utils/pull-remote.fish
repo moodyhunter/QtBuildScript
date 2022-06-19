@@ -10,7 +10,7 @@ set NIGHTLY_DIR "$BASE_DIR/nightly"
 
 set_color green && echo -n "=> " && set_color reset && echo "Pulling remote files..."
 cd $NIGHTLY_DIR/.pulled
-rsync --remove-source-files -rP "$QT_BUILDER_REMOTE" . || exit 1
+rsync -rP "$QT_BUILDER_REMOTE" . || exit 1
 
 cd $NIGHTLY_DIR
 

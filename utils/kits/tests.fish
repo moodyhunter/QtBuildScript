@@ -1,0 +1,4 @@
+set -p EXTRA_CMAKE_ARGUMENTS "-DQT_BUILD_TESTS=ON"
+
+set -g BUILD_KITS_DISPLAY (string match -v tests $BUILD_KITS_DISPLAY)
+exit 0
