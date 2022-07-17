@@ -1,4 +1,4 @@
-#!/bin/fish
+#!/usr/bin/env fish
 
 function reverse --description 'Reverse a list'
     set -l stack
