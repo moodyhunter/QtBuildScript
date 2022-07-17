@@ -76,7 +76,7 @@ set SKIP_CLEANUP (if set -q _flag_skip_cleanup; echo "1"; else; echo "0"; end)
 set NO_INSTALL (if set -q _flag_no_install; echo "1"; else; echo "0"; end)
 
 # Args
-set PARALLEL_LEVEL (if test -z "$_flag_parallel"; nproc; else; echo "$_flag_parallel"; end)
+set PARALLEL_LEVEL (if test -z "$_flag_parallel"; echo "$NPROCS"; else; echo "$_flag_parallel"; end)
 set QT_PLATFORM (if test -z "$_flag_platform"; echo "desktop"; else; echo "$_flag_platform"; end)
 set QT_ARCH (if test -z "$_flag_arch"; echo "x86_64"; else; echo "$_flag_arch"; end)
 set EXPORT_PATH "$_flag_export"
