@@ -10,8 +10,4 @@ cd $SRC_DIR
 
 git pull --rebase --verbose --autostash
 
-./init-repository \
-    --module-subset=(string join ',' $QT_MODULES) \
-    -f \
-    --force-hooks \
-    $argv
+./init-repository -f --force-hooks --module-subset=(string join ',' $QT_MODULES) $argv

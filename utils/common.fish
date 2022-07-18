@@ -33,12 +33,19 @@ set REALPATH_BIN realpath
 set -g BASE_DIR ($REALPATH_BIN (cd (dirname (status -f))/../; pwd))
 set -g SRC_DIR "$BASE_DIR/qt"
 
-set -g QT_MODULES qtbase qtsvg qtshadertools qtimageformats \
-    qtdeclarative qt5compat qtlanguageserver \
-    qtquicktimeline qtremoteobjects qttools qtactiveqt \
-    qttranslations qtwayland qtwebsockets qtpositioning \
-    qtcharts qtlottie qtnetworkauth qtvirtualkeyboard qtscxml \
-    qtserialbus qtserialport qtconnectivity qtrepotools qtspeech \
-    qthttpserver qtquick3dphysics qtmultimedia qtquick3d
+set -g QT_MODULES
+
+# Core modules
+set -ga QT_MODULES qtrepotools qtbase qtsvg qtshadertools qtimageformats qtdeclarative qtlanguageserver qttranslations qttools
+
+# Connection/Network modules
+set -ga QT_MODULES qtwebsockets qtnetworkauth qtconnectivity qtserialport qthttpserver qtserialbus
+
+# Optional modules
+set -ga QT_MODULES qtremoteobjects qt5compat qtquicktimeline
+
+# Platform-specific modules
+set -ga QT_MODULES qtactiveqt qtwayland qtcharts qtlottie qtvirtualkeyboard qtscxml qtspeech qtquick3dphysics qtmultimedia qtquick3d
+
 
 cd $BASE_DIR
