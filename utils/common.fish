@@ -29,7 +29,12 @@ else
     set NPROCS (nproc)
 end
 
-set REALPATH_BIN realpath
+if not command realpath
+    set REALPATH_BIN (which realpath)
+else
+    set REALPATH_BIN realpath
+end
+
 set -g BASE_DIR ($REALPATH_BIN (cd (dirname (status -f))/../; pwd))
 set -g SRC_DIR "$BASE_DIR/qt"
 
