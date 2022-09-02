@@ -41,7 +41,7 @@ set -g SRC_DIR "$BASE_DIR/qt"
 set -g QT_MODULES
 
 # Core modules
-set -ga QT_MODULES qtrepotools qtbase qtsvg qtshadertools qtimageformats qtdeclarative qtlanguageserver qttranslations qttools
+set -ga QT_MODULES qtrepotools qtbase qtsvg qtshadertools qtimageformats qtdeclarative qtlanguageserver qttools qttranslations
 
 # Connection/Network modules
 set -ga QT_MODULES qtwebsockets qtnetworkauth qtconnectivity qtserialport qthttpserver qtserialbus
