@@ -47,7 +47,7 @@ set -ga QT_MODULES qtrepotools qtbase qtsvg qtshadertools qtimageformats qtdecla
 set -ga QT_MODULES qtwebsockets qtnetworkauth qtconnectivity qtserialport qthttpserver qtserialbus
 
 # Optional modules
-set -ga QT_MODULES qtremoteobjects qt5compat qtquicktimeline
+set -ga QT_MODULES qtremoteobjects qt5compat qtquicktimeline qtgrpc
 
 # Platform-specific modules
 set -ga QT_MODULES qtactiveqt qtwayland qtcharts qtlottie qtvirtualkeyboard qtscxml qtspeech qtquick3dphysics qtmultimedia qtquick3d
